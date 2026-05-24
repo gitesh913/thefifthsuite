@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Build files
+dist/
+build/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Mac system files
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+
+# Coverage
+coverage/
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Temporary files
+tmp/
+temp/
+
+# TypeScript
+*.tsbuildinfo
+
+# Package manager lock files (optional)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Firebase
+.firebase/
+
+# Vercel
+.vercel/
+
+# Turborepo
+.turbo/
+
+# Misc
+*.pem
+node_modules
