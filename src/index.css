@@ -44,16 +44,31 @@ body::after {
   opacity: 0.15;
 }
 
+html {
+  scroll-behavior: smooth;
+  height: -webkit-fill-available;
+  overflow-y: scroll;
+}
+
 body {
   background: var(--bg-void);
   color: var(--aura-white);
   font-family: var(--font-body);
   overflow-x: hidden;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
+  overscroll-behavior-y: none; /* Prevents the bounce effect at top/bottom on mobile */
+  -webkit-font-smoothing: antialiased;
 }
 
-html {
-  scroll-behavior: smooth;
+/* Page transitions and general padding */
+.page-wrapper {
+  padding-bottom: 160px; /* Give more space at the bottom for all pages */
+}
+
+/* Ensure smooth scrolling for all containers with overflow */
+* {
+  -webkit-overflow-scrolling: touch;
 }
 
 /* THE GLASS MIXIN */

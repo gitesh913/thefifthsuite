@@ -729,10 +729,10 @@ export default function Home() {
       <footer style={{
         position: 'relative', zIndex: 1,
         borderTop: '1px solid rgba(253,111,136,0.1)',
-        padding: '60px 24px',
+        padding: 'clamp(60px, 12vh, 120px) 24px',
         textAlign: 'center',
       }}>
-        <p style={{ fontFamily: 'var(--font-heading)', fontSize: 18, letterSpacing: '0.2em', color: '#0a0a0c', opacity: 0.8, marginBottom: 12, fontWeight: 600 }}>
+        <p style={{ fontFamily: 'var(--font-heading)', fontSize: 18, letterSpacing: '0.2em', color: '#0a0a0c', opacity: 0.8, marginBottom: 16, fontWeight: 600 }}>
           TheFifthSuite
         </p>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'rgba(10, 10, 12, 0.5)', opacity: 1, letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 500 }}>
