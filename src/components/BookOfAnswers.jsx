@@ -98,32 +98,61 @@ export default function BookOfAnswers({ isOpen, onClose }) {
       </div>
 
       {/* THE BOOK ASSEMBLY */}
-      <div style={{ position: 'relative', width: 'min(92vw, 880px)', height: 'min(70vh, 580px)', zIndex: 1 }}>
+      <div style={{ 
+        position: 'relative', 
+        width: 'min(94vw, 880px)', 
+        height: 'auto',
+        minHeight: 'min(75vh, 600px)',
+        zIndex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
         
         {/* PHYSICAL SPREAD */}
         <motion.div 
-          animate={{ y: [0, -10, 0] }}
+          animate={{ y: [0, -8, 0] }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
           style={{
-            display: 'flex', width: '100%', height: '100%',
+            display: 'flex', 
+            flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+            width: '100%', 
+            height: '100%',
             background: '#f4e4d4',
-            borderRadius: 12,
+            borderRadius: 16,
             overflow: 'hidden',
-            boxShadow: '0 50px 100px rgba(0,0,0,0.9), 0 0 30px rgba(253, 111, 136, 0.1)',
+            boxShadow: '0 50px 100px rgba(0,0,0,0.8), 0 0 30px rgba(253, 111, 136, 0.15)',
             backgroundImage: 'url("https://www.transparenttextures.com/patterns/old-map.png")',
             position: 'relative',
           }}
         >
           {/* Central Gutter / Spine Shadow */}
           <div style={{ 
-            position: 'absolute', left: '50%', top: 0, bottom: 0, width: 60, 
-            transform: 'translateX(-50%)',
-            background: 'linear-gradient(to right, transparent, rgba(0,0,0,0.1), rgba(0,0,0,0.2), rgba(0,0,0,0.1), transparent)',
+            position: 'absolute', 
+            left: window.innerWidth < 768 ? 0 : '50%', 
+            top: window.innerWidth < 768 ? '50%' : 0, 
+            right: 0,
+            bottom: 0,
+            width: window.innerWidth < 768 ? '100%' : 60,
+            height: window.innerWidth < 768 ? 40 : 'auto',
+            transform: window.innerWidth < 768 ? 'translateY(-50%)' : 'translateX(-50%)',
+            background: window.innerWidth < 768 
+              ? 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.08), rgba(0,0,0,0.15), rgba(0,0,0,0.08), transparent)'
+              : 'linear-gradient(to right, transparent, rgba(0,0,0,0.08), rgba(0,0,0,0.15), rgba(0,0,0,0.08), transparent)',
             zIndex: 10
           }} />
 
           {/* LEFT PAGE - Content */}
-          <div style={{ flex: 1, padding: 60, borderRight: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+          <div style={{ 
+            flex: 1, 
+            padding: 'clamp(40px, 8vw, 60px)', 
+            borderRight: window.innerWidth < 768 ? 'none' : '1px solid rgba(0,0,0,0.05)', 
+            borderBottom: window.innerWidth < 768 ? '1px solid rgba(0,0,0,0.05)' : 'none',
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            textAlign: 'center' 
+          }}>
             <AnimatePresence mode="wait">
               {phase === 'ready' ? (
                 <motion.div
@@ -132,20 +161,20 @@ export default function BookOfAnswers({ isOpen, onClose }) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                 >
-                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: '#1a0f0f', marginBottom: 24 }}>The Journey Begins</h3>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 18, color: '#2a1a1a', lineHeight: 1.8 }}>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(24px, 5vw, 32px)', color: '#1a0f0f', marginBottom: 20 }}>The Journey Begins</h3>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(15px, 3.5vw, 18px)', color: '#2a1a1a', lineHeight: 1.6 }}>
                     Relax. Take a deep breath.<br/>
-                    Think of your wish clearly three times.
+                    Think of your wish clearly 3 times.
                   </p>
                   <motion.button
                     whileHover={{ scale: 1.05, background: '#1a0f0f' }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleFindAnswer}
                     style={{
-                      marginTop: 48, padding: '18px 40px', borderRadius: 50,
+                      marginTop: 32, padding: '16px 32px', borderRadius: 50,
                       background: '#2a1a1a', color: '#f4e4d4', border: 'none',
                       fontFamily: 'var(--font-heading)', fontSize: 13, textTransform: 'uppercase', cursor: 'pointer',
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: 10, margin: '48px auto 0'
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: 10, margin: '32px auto 0'
                     }}
                   >
                     <Wand2 size={16} /> Consult Oracle
@@ -160,7 +189,7 @@ export default function BookOfAnswers({ isOpen, onClose }) {
           </div>
 
           {/* RIGHT PAGE - Result */}
-          <div style={{ flex: 1, padding: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+          <div style={{ flex: 1, padding: 'clamp(40px, 8vw, 60px)', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
             <AnimatePresence mode="wait">
               {phase === 'result' ? (
                 <motion.div
@@ -169,16 +198,16 @@ export default function BookOfAnswers({ isOpen, onClose }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                 >
-                  <p style={{ fontFamily: 'var(--font-heading)', fontSize: 11, color: '#8b5e3c', letterSpacing: '0.3em', marginBottom: 20 }}>✦ THE TRUTH REVEALED ✦</p>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 48, color: '#1a0f0f', marginBottom: 20 }}>{answer?.title}</h2>
-                  <div style={{ width: 80, height: 1, background: '#8b5e3c', margin: '0 auto 32px', opacity: 0.3 }} />
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 19, color: '#2a1a1a', fontStyle: 'italic', lineHeight: 1.7 }}>"{answer?.text}"</p>
+                  <p style={{ fontFamily: 'var(--font-heading)', fontSize: 10, color: '#8b5e3c', letterSpacing: '0.25em', marginBottom: 16 }}>✦ THE TRUTH REVEALED ✦</p>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(32px, 8vw, 48px)', color: '#1a0f0f', marginBottom: 16 }}>{answer?.title}</h2>
+                  <div style={{ width: 60, height: 1, background: '#8b5e3c', margin: '0 auto 24px', opacity: 0.3 }} />
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(16px, 4vw, 19px)', color: '#2a1a1a', fontStyle: 'italic', lineHeight: 1.6 }}>"{answer?.text}"</p>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     onClick={handleRetry}
                     style={{
-                      marginTop: 50, background: 'none', border: '1px solid #8b5e3c',
-                      padding: '12px 24px', borderRadius: 50, color: '#8b5e3c',
+                      marginTop: 40, background: 'none', border: '1px solid #8b5e3c',
+                      padding: '10px 20px', borderRadius: 50, color: '#8b5e3c',
                       fontFamily: 'var(--font-heading)', fontSize: 10, cursor: 'pointer'
                     }}
                   >
@@ -196,9 +225,9 @@ export default function BookOfAnswers({ isOpen, onClose }) {
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                   >
-                    <Sparkles size={48} color="#D63D5A" />
+                    <Sparkles size={32} color="#D63D5A" />
                   </motion.div>
-                  <p style={{ fontFamily: 'var(--font-heading)', fontSize: 12, color: '#8b5e3c', letterSpacing: '0.2em', marginTop: 24 }}>
+                  <p style={{ fontFamily: 'var(--font-heading)', fontSize: 11, color: '#8b5e3c', letterSpacing: '0.2em', marginTop: 16 }}>
                     CONSULTING THE VOID...
                   </p>
                 </motion.div>
@@ -206,12 +235,12 @@ export default function BookOfAnswers({ isOpen, onClose }) {
                  <motion.p 
                    initial={{ opacity: 0 }}
                    animate={{ opacity: 1 }}
-                   style={{ fontFamily: 'var(--font-heading)', fontSize: 11, color: '#8b5e3c', letterSpacing: '0.3em' }}
+                   style={{ fontFamily: 'var(--font-heading)', fontSize: 11, color: '#8b5e3c', letterSpacing: '0.25em' }}
                  >
                    OPENING THE GRIMOIRE...
                  </motion.p>
               ) : (
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: '#8b5e3c', opacity: 0.5 }}>Waiting for alignment...</p>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: '#8b5e3c', opacity: 0.5 }}>Waiting for alignment...</p>
               )}
             </AnimatePresence>
           </div>

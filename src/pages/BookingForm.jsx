@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, Loader } from 'lucide-react'
 import AuroraBackground from '../components/AuroraBackground'
+import CelestialCalendar from '../components/CelestialCalendar'
 import { bookingCategories } from '../data/bookingTypes'
 
 const defaultCategory = {
@@ -23,9 +24,13 @@ function validate(form) {
   if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = 'Valid email address required'
   if (!form.readingType) errors.readingType = 'Please select a reading type'
   if (!form.date) errors.date = 'Please select a preferred date'
-  if (!form.time) errors.time = 'Please select a preferred time'
   return errors
 }
+
+// Mock data for already booked days
+const initialBookedDays = [
+  `${new Date().toISOString().split('T')[0]}`,
+]
 
 export default function BookingForm() {
   const { categoryId } = useParams()
@@ -39,8 +44,10 @@ export default function BookingForm() {
   const [form, setForm] = useState({
     name: '', phone: '', email: '',
     readingType: location.state?.bookingType ? readingTypes[['urgent','oneday','weekly','monthly'].indexOf(location.state.bookingType)] || '' : '',
-    date: '', time: '',
+    date: '',
   })
+  
+  const [bookedDays, setBookedDays] = useState(initialBookedDays)
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -53,53 +60,95 @@ export default function BookingForm() {
   const handleSubmit = async () => {
     const errs = validate(form)
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
+    
+    // Final Availability Check
+    if (bookedDays.includes(form.date)) {
+      setErrors({ date: 'This celestial day was just aligned by another soul.' })
+      return
+    }
+    
     setSubmitting(true)
-    await new Promise(r => setTimeout(r, 1600))
+    await new Promise(r => setTimeout(r, 2000))
+    
+    setBookedDays(prev => [...prev, form.date])
+    
     setSubmitting(false)
     setSuccess(true)
   }
 
   const inputStyle = (field) => ({
-    background: 'rgba(255,255,255,0.04)',
+    background: 'rgba(255, 255, 255, 0.4)',
     border: 'none',
-    borderBottom: `1px solid ${errors[field] ? 'rgba(249,168,212,0.6)' : 'rgba(255,255,255,0.2)'}`,
-    borderRadius: '8px 8px 0 0',
-    padding: '14px 16px',
-    color: 'var(--aura-white)',
+    borderBottom: `1px solid ${errors[field] ? 'var(--aura-lavender)' : 'rgba(10, 10, 12, 0.1)'}`,
+    borderRadius: '12px 12px 0 0',
+    padding: '16px 20px',
+    color: '#0a0a0c',
     fontFamily: 'var(--font-body)',
     width: '100%',
     outline: 'none',
-    fontSize: 14,
-    backdropFilter: 'blur(8px)',
-    transition: 'border-color 0.2s',
+    fontSize: 15,
+    backdropFilter: 'blur(12px)',
+    transition: 'all 0.3s ease',
   })
 
   return (
-    <div className="page-wrapper" style={{ minHeight: '100vh' }}>
+    <div className="page-wrapper" style={{ minHeight: '100vh', transition: 'background 1s ease' }}>
       <AuroraBackground accentColor={category.auroraColor} />
 
-      <div style={{ position: 'relative', zIndex: 1, paddingTop: 100, paddingBottom: 80, padding: '100px 24px 80px' }}>
-        {/* Breadcrumb */}
-        <div className="container-max" style={{ maxWidth: 700 }}>
-          <div style={{ marginBottom: 32 }}>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--aura-ghost)' }}>
-              <Link to="/booking" style={{ color: 'var(--aura-ghost)', textDecoration: 'none' }}>Bookings</Link>
-              {' → '}
-              <span style={{ color: 'white' }}>{category.title}</span>
+      {/* Dynamic Background Overlay based on Category */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.15 }}
+        style={{ 
+          position: 'fixed', inset: 0, 
+          background: category.color, 
+          pointerEvents: 'none', 
+          zIndex: 0,
+          filter: 'blur(100px)'
+        }} 
+      />
+
+      <div style={{ position: 'relative', zIndex: 1, paddingTop: 'clamp(80px, 10vh, 120px)', paddingBottom: 80, paddingLeft: 'min(24px, 5vw)', paddingRight: 'min(24px, 5vw)' }}>
+        <div className="container-max" style={{ maxWidth: 720 }}>
+          {/* Breadcrumb with category tint */}
+          <div style={{ marginBottom: 40 }}>
+            <span style={{ fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(10, 10, 12, 0.5)' }}>
+              <Link to="/booking" style={{ color: 'inherit', textDecoration: 'none' }}>The Sanctuary</Link>
+              {' '} • {' '}
+              <span style={{ color: category.color, fontWeight: 700 }}>{category.title}</span>
             </span>
           </div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 48 }}>
-            <h1 style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 300,
-              fontSize: 'clamp(36px, 5vw, 56px)',
-              color: category.color,
-              marginBottom: 12,
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 56 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+              <div style={{ 
+                width: 48, height: 48, 
+                borderRadius: 12, 
+                background: 'rgba(255, 255, 255, 0.5)', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1px solid rgba(255, 255, 255, 0.6)',
+                color: category.color,
+                boxShadow: `0 8px 20px ${category.glow}`
+              }}>
+                ✦
+              </div>
+              <h1 style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 400,
+                fontSize: 'clamp(32px, 8vw, 64px)',
+                color: '#0a0a0c',
+                lineHeight: 1,
+              }}>
+                {category.title}
+              </h1>
+            </div>
+            <p style={{ 
+              fontFamily: 'var(--font-body)', 
+              fontSize: 'clamp(16px, 4vw, 18px)', 
+              color: 'rgba(10, 10, 12, 0.7)', 
+              fontWeight: 450,
+              maxWidth: 500
             }}>
-              {category.title} Reading
-            </h1>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--aura-ghost)' }}>
               {category.subtitle}
             </p>
           </motion.div>
@@ -108,36 +157,41 @@ export default function BookingForm() {
             {!success ? (
               <motion.div
                 key="form"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
                 className="glass"
                 style={{
-                  padding: 48,
-                  border: `1px solid ${category.color}3F`,
-                  boxShadow: `0 0 60px ${category.color}1A, var(--glass-shadow)`,
+                  padding: 'clamp(24px, 6vw, 56px) clamp(20px, 5vw, 48px)',
+                  borderRadius: 32,
+                  background: category.gradient,
+                  border: '1px solid rgba(255, 255, 255, 0.5)',
+                  boxShadow: `0 30px 70px rgba(0,0,0,0.08), inset 0 1px 2px rgba(255,255,255,0.8)`,
                 }}
               >
-                {/* Reading type pills */}
-                <div style={{ marginBottom: 40 }}>
-                  <label style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: category.color, marginBottom: 12 }}>
-                    Reading Type
+                {/* Reading type selection */}
+                <div style={{ marginBottom: 48 }}>
+                  <label style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#0a0a0c', marginBottom: 20, fontWeight: 700 }}>
+                    Select Your Intent
                   </label>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: window.innerWidth < 640 ? 'center' : 'flex-start' }}>
                     {readingTypes.map(type => (
                       <button
                         key={type}
                         onClick={() => handleChange('readingType', type)}
                         style={{
-                          padding: '8px 18px',
-                          borderRadius: 50,
-                          border: `1px solid ${form.readingType === type ? category.color : 'rgba(255,255,255,0.2)'}`,
-                          background: form.readingType === type ? `${category.color}1A` : 'transparent',
-                          color: form.readingType === type ? category.color : 'var(--aura-ghost)',
-                          fontFamily: 'var(--font-body)',
-                          fontSize: 13,
+                          padding: window.innerWidth < 640 ? '10px 16px' : '12px 24px',
+                          borderRadius: 14,
+                          border: `1px solid ${form.readingType === type ? '#0a0a0c' : 'rgba(10, 10, 12, 0.1)'}`,
+                          background: form.readingType === type ? '#0a0a0c' : 'rgba(255, 255, 255, 0.3)',
+                          color: form.readingType === type ? 'white' : 'rgba(10, 10, 12, 0.6)',
+                          fontFamily: 'var(--font-heading)',
+                          fontSize: window.innerWidth < 640 ? 10 : 12,
+                          letterSpacing: '0.05em',
                           cursor: 'pointer',
-                          transition: 'all 0.2s',
+                          transition: 'all 0.3s ease',
+                          boxShadow: form.readingType === type ? `0 10px 20px rgba(0,0,0,0.1)` : 'none',
+                          flex: window.innerWidth < 640 ? '1 1 calc(50% - 10px)' : 'none',
                         }}
                       >
                         {type}
@@ -147,93 +201,92 @@ export default function BookingForm() {
                   {errors.readingType && <span className="field-error">{errors.readingType}</span>}
                 </div>
 
-                {/* Fields */}
-                {[
-                  { label: 'Full Name', field: 'name', type: 'text', placeholder: 'Your full name' },
-                  { label: 'Phone Number', field: 'phone', type: 'tel', placeholder: '+91 98765 43210' },
-                  { label: 'Email Address', field: 'email', type: 'email', placeholder: 'you@example.com' },
-                ].map(({ label, field, type, placeholder }) => (
-                  <div key={field} style={{ marginBottom: 32 }}>
-                    <label style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: category.color, marginBottom: 8 }}>
-                      {label}
-                    </label>
-                    <input
-                      type={type}
-                      value={form[field]}
-                      onChange={e => handleChange(field, e.target.value)}
-                      placeholder={placeholder}
-                      style={inputStyle(field)}
-                      onFocus={e => { e.target.style.borderBottomColor = category.color; e.target.style.boxShadow = `0 2px 0 ${category.color}` }}
-                      onBlur={e => { e.target.style.borderBottomColor = errors[field] ? 'rgba(249,168,212,0.6)' : 'rgba(255,255,255,0.2)'; e.target.style.boxShadow = 'none' }}
-                    />
-                    {errors[field] && <span className="field-error">{errors[field]}</span>}
-                  </div>
-                ))}
+                {/* Main Fields */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  {[
+                    { label: 'Name on the Stars', field: 'name', type: 'text', placeholder: 'Enter your full name' },
+                    { label: 'Contact Channel', field: 'phone', type: 'tel', placeholder: '+91 00000 00000' },
+                    { label: 'Electronic Scroll', field: 'email', type: 'email', placeholder: 'your@essence.com' },
+                  ].map(({ label, field, type, placeholder }) => (
+                    <div key={field}>
+                      <label style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#0a0a0c', marginBottom: 10, fontWeight: 700 }}>
+                        {label}
+                      </label>
+                      <input
+                        type={type}
+                        value={form[field]}
+                        onChange={e => handleChange(field, e.target.value)}
+                        placeholder={placeholder}
+                        style={inputStyle(field)}
+                        onFocus={e => { 
+                          e.target.style.borderBottomColor = category.color; 
+                          e.target.style.boxShadow = `0 1px 0 ${category.color}`;
+                          e.target.style.background = 'rgba(255, 255, 255, 0.6)';
+                        }}
+                        onBlur={e => { 
+                          e.target.style.borderBottomColor = errors[field] ? 'var(--aura-lavender)' : 'rgba(10, 10, 12, 0.1)'; 
+                          e.target.style.boxShadow = 'none';
+                          e.target.style.background = 'rgba(255, 255, 255, 0.4)';
+                        }}
+                      />
+                      {errors[field] && <span className="field-error">{errors[field]}</span>}
+                    </div>
+                  ))}
 
-                {/* Date + Time */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 32 }}>
-                  <div>
-                    <label style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: category.color, marginBottom: 8 }}>
-                      Preferred Date
+                  {/* Date Selection - Celestial Calendar */}
+                  <div style={{ marginTop: 16 }}>
+                    <label style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#0a0a0c', marginBottom: 20, fontWeight: 700 }}>
+                      Consult the Alignment
                     </label>
-                    <input
-                      type="date"
-                      value={form.date}
-                      onChange={e => handleChange('date', e.target.value)}
-                      style={{ ...inputStyle('date'), colorScheme: 'dark' }}
-                      onFocus={e => { e.target.style.borderBottomColor = category.color }}
-                      onBlur={e => { e.target.style.borderBottomColor = 'rgba(255,255,255,0.2)' }}
+                    <CelestialCalendar 
+                      selectedDate={form.date}
+                      onDateChange={(date) => handleChange('date', date)}
+                      themeColor={category.color}
+                      themeGradient={category.gradient}
+                      unavailableSlots={bookedDays}
                     />
-                    {errors.date && <span className="field-error">{errors.date}</span>}
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', color: category.color, marginBottom: 8 }}>
-                      Preferred Time
-                    </label>
-                    <input
-                      type="time"
-                      value={form.time}
-                      onChange={e => handleChange('time', e.target.value)}
-                      style={{ ...inputStyle('time'), colorScheme: 'dark' }}
-                      onFocus={e => { e.target.style.borderBottomColor = category.color }}
-                      onBlur={e => { e.target.style.borderBottomColor = 'rgba(255,255,255,0.2)' }}
-                    />
-                    {errors.time && <span className="field-error">{errors.time}</span>}
+                    {errors.date && (
+                      <div style={{ marginTop: 12 }}>
+                        <span className="field-error">{errors.date}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Submit */}
+                {/* Final Call */}
                 <motion.button
-                  whileHover={{ background: `${category.color}33` }}
+                  whileHover={{ scale: 1.02, background: '#0a0a0c', boxShadow: `0 15px 30px rgba(0,0,0,0.2)` }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleSubmit}
                   disabled={submitting}
                   style={{
+                    marginTop: 56,
                     width: '100%',
-                    height: 56,
-                    background: `${category.color}1A`,
-                    border: `1px solid ${category.color}7A`,
-                    borderRadius: 12,
+                    height: 64,
+                    background: '#0a0a0c',
+                    border: 'none',
+                    borderRadius: 16,
                     color: 'white',
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 14,
-                    letterSpacing: '0.15em',
+                    fontSize: 15,
+                    letterSpacing: '0.2em',
                     textTransform: 'uppercase',
                     cursor: submitting ? 'wait' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 10,
-                    transition: 'all 0.2s',
+                    gap: 12,
+                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                   }}
                 >
                   {submitting ? (
                     <>
                       <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                        <Loader size={18} />
+                        <Loader size={20} />
                       </motion.div>
-                      <span>Sending your request...</span>
+                      <span>Aligning Stars...</span>
                     </>
-                  ) : 'Request Your Reading'}
+                  ) : `Request ${category.title} Reading`}
                 </motion.button>
               </motion.div>
             ) : (
@@ -243,43 +296,55 @@ export default function BookingForm() {
                 animate={{ opacity: 1, y: 0 }}
                 className="glass"
                 style={{
-                  padding: 64,
+                  padding: 80,
                   textAlign: 'center',
-                  border: `1px solid ${category.color}3F`,
-                  boxShadow: `0 0 60px ${category.color}1A`,
+                  borderRadius: 40,
+                  background: category.gradient,
+                  border: '1px solid rgba(255, 255, 255, 0.6)',
+                  boxShadow: `0 40px 100px rgba(0,0,0,0.1), 0 0 40px ${category.glow}`,
                 }}
               >
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
-                  style={{ marginBottom: 32 }}
+                  initial={{ scale: 0, rotate: -45 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.2 }}
+                  style={{ marginBottom: 40 }}
                 >
-                  <CheckCircle size={72} style={{ color: category.color, margin: '0 auto' }} />
+                  <div style={{ 
+                    width: 100, height: 100, 
+                    borderRadius: '50%', 
+                    background: 'white', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto',
+                    boxShadow: `0 20px 40px rgba(0,0,0,0.05)`
+                  }}>
+                    <CheckCircle size={56} style={{ color: category.color }} />
+                  </div>
                 </motion.div>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 36, color: 'white', marginBottom: 16 }}>
-                  Your request has been received.
+                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 42, color: '#0a0a0c', marginBottom: 20 }}>
+                  Destiny Shared
                 </h2>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--aura-ghost)', marginBottom: 40, lineHeight: 1.7 }}>
-                  The reader will confirm your session personally. Check your email for next steps.
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, color: 'rgba(10, 10, 12, 0.7)', marginBottom: 48, lineHeight: 1.8, fontWeight: 450, maxWidth: 500, margin: '0 auto 48px' }}>
+                  Seraphina has received your intent for a <strong>{category.title}</strong> session. A confirmation scroll will reach your inbox shortly.
                 </p>
                 <motion.button
-                  whileHover={{ y: -3 }}
+                  whileHover={{ y: -4, background: '#1a1a1a', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}
                   onClick={() => navigate('/')}
                   style={{
-                    padding: '14px 32px',
-                    background: `${category.color}1A`,
-                    border: `1px solid ${category.color}7A`,
-                    borderRadius: 12,
+                    padding: '20px 48px',
+                    background: '#0a0a0c',
+                    border: 'none',
+                    borderRadius: 16,
                     color: 'white',
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 13,
-                    letterSpacing: '0.12em',
+                    fontSize: 14,
+                    letterSpacing: '0.15em',
                     textTransform: 'uppercase',
                     cursor: 'pointer',
+                    transition: 'all 0.3s ease',
                   }}
                 >
-                  Return Home
+                  Return to Sanctuary
                 </motion.button>
               </motion.div>
             )}

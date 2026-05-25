@@ -220,3 +220,14 @@ html {
 .star-gold {
   color: var(--aura-gold);
 }
+
+@media (max-width: 639px) {
+  .page-wrapper section {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .page-wrapper h1 {
+    letter-spacing: 0;
+  }
+}

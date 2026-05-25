@@ -2,6 +2,7 @@ import React, { memo } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { getMoonPhase } from '../utils/moonPhase'
+import { ChevronRight } from 'lucide-react'
 
 function MoonIcon({ phase, illumination, size = 80 }) {
   return (
@@ -70,98 +71,156 @@ const phaseDescriptions = {
   'Waning Crescent': 'Rest, reflect, and surrender to the void.',
 }
 
-function MoonPhaseWidget() {
+function MoonPhaseWidget({ compact = false, className = '', style = {} }) {
   const { phaseName, illumination, moonAge } = getMoonPhase()
 
   return (
-    <Link to="/moon-details" style={{ textDecoration: 'none' }}>
+    <Link to="/moon-details" style={{ textDecoration: 'none', ...style }} className={className}>
       <motion.div
-        whileHover={{ scale: 1.02, y: -4 }}
+        whileHover={compact ? { scale: 1.03 } : { scale: 1.02, y: -4 }}
         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         style={{
+          position: 'relative',
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          flexDirection: compact ? 'row' : 'column',
+          alignItems: compact ? 'center' : 'center',
+          gap: compact ? 12 : 0,
           background: 'rgba(255, 255, 255, 0.5)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           border: '1px solid rgba(253, 111, 136, 0.2)',
-          borderRadius: 28,
-          padding: '32px 24px',
-          width: 220, 
+          borderRadius: compact ? 22 : 28,
+          padding: compact ? '14px 14px 14px 12px' : '32px 24px',
+          width: compact ? 'auto' : 220,
+          minWidth: compact ? 0 : 220,
           boxShadow: '0 8px 32px rgba(253, 111, 136, 0.1)',
           textAlign: 'center',
           cursor: 'pointer',
         }}
       >
-        <MoonIcon phase={phaseName} illumination={illumination} size={90} />
+        <MoonIcon phase={phaseName} illumination={illumination} size={compact ? 52 : 90} />
 
-        <h4 style={{
-          fontFamily: 'var(--font-heading)',
-          fontSize: 16,
-          color: '#0a0a0c',
-          fontWeight: 700,
-          letterSpacing: '0.12em',
-          marginBottom: 10,
-          textTransform: 'uppercase',
-        }}>
-          {phaseName}
-        </h4>
+        {compact && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left' }}>
+            <p style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: 10,
+              color: 'rgba(10, 10, 12, 0.45)',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              marginBottom: 4,
+            }}>
+              Moon
+            </p>
 
-        <p style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 12,
-          color: '#D63D5A',
-          fontWeight: 600,
-          marginBottom: 6,
-        }}>
-          {illumination}% Illuminated
-        </p>
+            <h4 style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: 13,
+              color: '#0a0a0c',
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              marginBottom: 3,
+            }}>
+              {phaseName}
+            </h4>
 
-        <p style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 11,
-          color: 'rgba(10, 10, 12, 0.6)',
-          fontWeight: 500,
-          marginBottom: 16,
-          letterSpacing: '0.05em',
-        }}>
-          Moon Age: {moonAge} days
-        </p>
+            <p style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 11,
+              color: '#D63D5A',
+              fontWeight: 600,
+              marginBottom: 2,
+            }}>
+              {illumination}% illuminated
+            </p>
 
-        <div style={{
-          width: 40,
-          height: 1,
-          background: 'rgba(214, 61, 90, 0.3)',
-          margin: '0 auto 16px',
-        }} />
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              fontFamily: 'var(--font-heading)',
+              fontSize: 9,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: 'rgba(10, 10, 12, 0.6)',
+            }}>
+              Open
+              <ChevronRight size={11} />
+            </span>
+          </div>
+        )}
 
-        <p style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 13,
-          lineHeight: 1.6,
-          color: '#0a0a0c',
-          fontWeight: 450,
-          fontStyle: 'italic',
-        }}>
-          {phaseDescriptions[phaseName] || 'The cosmos is in motion.'}
-        </p>
+        {!compact && (
+          <>
+            <h4 style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: 16,
+              color: '#0a0a0c',
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              marginBottom: 10,
+              textTransform: 'uppercase',
+            }}>
+              {phaseName}
+            </h4>
 
-        <motion.span
-          animate={{ opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          style={{
-            marginTop: 16,
-            fontSize: 10,
-            fontFamily: 'var(--font-heading)',
-            color: '#D63D5A',
-            fontWeight: 700,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase'
-          }}
-        >
-          View Lunar Cycle →
-        </motion.span>
+            <p style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 12,
+              color: '#D63D5A',
+              fontWeight: 600,
+              marginBottom: 6,
+            }}>
+              {illumination}% Illuminated
+            </p>
+
+            <p style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 11,
+              color: 'rgba(10, 10, 12, 0.6)',
+              fontWeight: 500,
+              marginBottom: 16,
+              letterSpacing: '0.05em',
+            }}>
+              Moon Age: {moonAge} days
+            </p>
+
+            <div style={{
+              width: 40,
+              height: 1,
+              background: 'rgba(214, 61, 90, 0.3)',
+              margin: '0 auto 16px',
+            }} />
+
+            <p style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 13,
+              lineHeight: 1.6,
+              color: '#0a0a0c',
+              fontWeight: 450,
+              fontStyle: 'italic',
+            }}>
+              {phaseDescriptions[phaseName] || 'The cosmos is in motion.'}
+            </p>
+
+            <motion.span
+              animate={{ opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              style={{
+                marginTop: 16,
+                fontSize: 10,
+                fontFamily: 'var(--font-heading)',
+                color: '#D63D5A',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase'
+              }}
+            >
+              View Lunar Cycle →
+            </motion.span>
+          </>
+        )}
       </motion.div>
     </Link>
   )

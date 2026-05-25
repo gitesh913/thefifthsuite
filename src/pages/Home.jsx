@@ -3,12 +3,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion'
 import { Zap, Clock, Calendar, CalendarRange, Quote, Sparkles, Star, Users, Globe } from 'lucide-react'
 import AuroraBackground from '../components/AuroraBackground'
+import MoonPhaseWidget from '../components/MoonPhaseWidget'
 
 const iconMap = { Zap, Clock, Calendar, CalendarRange }
 
 // --- ENHANCED COMPONENTS ---
 
-function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#fff' }) {
+function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#fff', bgGradient = 'rgba(255, 255, 255, 0.6)' }) {
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const mouseXSpring = useSpring(x)
@@ -46,9 +47,11 @@ function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#
       }}
       whileHover={{ 
         scale: 1.02,
-        borderColor: tintColor,
-        boxShadow: `0 25px 50px rgba(0,0,0,0.1), 0 0 25px ${tintColor}66`,
+        y: -8,
+        borderColor: 'rgba(255,255,255,0.8)',
+        boxShadow: `0 20px 40px rgba(0,0,0,0.08), 0 0 15px ${tintColor}44`,
       }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
       className={`glass ${className}`}
     >
       {/* Intense Reflection Overlay */}
@@ -56,19 +59,21 @@ function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#
         style={{
           position: 'absolute',
           inset: 0,
-          background: `linear-gradient(135deg, ${tintColor}44 0%, ${tintColor}11 40%, transparent 60%, ${tintColor}33 100%)`,
+          background: `linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 40%, transparent 60%, ${tintColor}22 100%)`,
           zIndex: 0,
           borderRadius: 'inherit',
         }}
-        whileHover={{ background: `linear-gradient(135deg, ${tintColor}66 0%, ${tintColor}22 40%, transparent 60%, ${tintColor}44 100%)` }}
       />
       
-      {/* Background glass saturation */}
+      {/* Background glass saturation - Luxury Aesthetic */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        backdropFilter: 'blur(12px) saturate(200%)',
+        background: bgGradient,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.4)',
+        boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.6), 0 10px 30px rgba(0,0,0,0.05)',
         zIndex: -1,
         borderRadius: 'inherit',
       }} />
@@ -83,12 +88,12 @@ function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 45%, rgba(255,255,255,0.4) 50%, transparent 55%)',
+          background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.6) 45%, rgba(255,255,255,0.6) 50%, transparent 55%)',
           zIndex: 1,
           opacity: 0,
           borderRadius: 'inherit',
         }}
-        whileHover={{ opacity: 0.3, left: ['-100%', '100%'] }}
+        whileHover={{ opacity: 0.4, left: ['-100%', '100%'] }}
         transition={{ duration: 1, ease: "easeInOut" }}
       />
     </motion.div>
@@ -305,10 +310,42 @@ function SectionHeading({ subtitle, title, centered = false }) {
 }
 
 const bookingTypesData = [
-  { id: 'urgent', name: 'Urgent Reading', description: 'Immediate clarity when the path is uncertain. Same-day availability.', icon: 'Zap', price: '₹ 2,500', color: '#f28482' }, // Red/Coral
-  { id: 'oneday', name: 'One Day Prior', description: 'Thoughtful preparation for the journey ahead. Scheduled with intent.', icon: 'Clock', price: '₹ 2,000', color: '#84a59d' }, // Green/Sage
-  { id: 'weekly', name: 'Weekly Reading', description: 'Your spiritual compass for the seven days ahead. Deep alignment.', icon: 'Calendar', price: '₹ 6,000', color: '#f5cac3' }, // Orange/Peach
-  { id: 'monthly', name: 'Monthly Reading', description: 'Exhaustive life review. Mapping the lunar currents of your soul.', icon: 'CalendarRange', price: '₹ 10,000', color: '#f7ede2' }, // Yellow/Cream
+  { 
+    id: 'urgent', 
+    name: 'Urgent Reading', 
+    description: 'Immediate clarity when the path is uncertain. Same-day availability.', 
+    icon: 'Zap', 
+    price: '₹ 2,500', 
+    color: 'rgba(253, 111, 136, 0.7)',
+    bg: 'linear-gradient(145deg, rgba(255, 245, 247, 0.88), rgba(245, 220, 228, 0.78))' 
+  },
+  { 
+    id: 'oneday', 
+    name: 'One Day Prior', 
+    description: 'Thoughtful preparation for the journey ahead. Scheduled with intent.', 
+    icon: 'Clock', 
+    price: '₹ 2,000', 
+    color: 'rgba(142, 154, 175, 0.7)',
+    bg: 'linear-gradient(145deg, rgba(240, 244, 255, 0.92), rgba(220, 228, 240, 0.82))' 
+  },
+  { 
+    id: 'weekly', 
+    name: 'Weekly Reading', 
+    description: 'Your spiritual compass for the seven days ahead. Deep alignment.', 
+    icon: 'Calendar', 
+    price: '₹ 6,000', 
+    color: 'rgba(178, 141, 255, 0.7)',
+    bg: 'linear-gradient(145deg, rgba(248, 244, 255, 0.92), rgba(228, 218, 250, 0.82))' 
+  },
+  { 
+    id: 'monthly', 
+    name: 'Monthly Reading', 
+    description: 'Exhaustive life review. Mapping the lunar currents of your soul.', 
+    icon: 'CalendarRange', 
+    price: '₹ 10,000', 
+    color: 'rgba(227, 187, 118, 0.7)',
+    bg: 'linear-gradient(145deg, rgba(255, 248, 238, 0.92), rgba(244, 226, 196, 0.82))' 
+  },
 ]
 
 
@@ -321,9 +358,24 @@ export default function Home() {
       <StarField />
       <SolarSystemBackground />
 
+      <motion.div
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 1, duration: 0.8 }}
+        style={{
+          position: 'fixed',
+          right: 'clamp(12px, 3vw, 20px)',
+          bottom: 'clamp(18px, 4vh, 28px)',
+          zIndex: 30,
+        }}
+        className="sm:hidden"
+      >
+        <MoonPhaseWidget compact />
+      </motion.div>
+
       {/* HERO */}
       <section style={{
-        height: '100vh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-start',
@@ -331,17 +383,33 @@ export default function Home() {
         position: 'relative',
         zIndex: 1,
         textAlign: 'left',
-        padding: '0 8%',
+        padding: '120px 8% 80px',
         maxWidth: 1400,
         margin: '0 auto',
         overflow: 'hidden',
       }}>
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1, duration: 0.8 }}
+          style={{
+            position: 'absolute',
+            right: 'clamp(4%, 8vw, 8%)',
+            top: 'clamp(15%, 20vh, 25%)',
+            zIndex: 10,
+          }}
+          className="hidden sm:block"
+        >
+          <MoonPhaseWidget />
+        </motion.div>
+
         <div style={{ position: 'absolute', right: '-10%', top: '50%', transform: 'translateY(-50%)', opacity: 0.1, pointerEvents: 'none' }}>
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
             style={{
-              width: 800, height: 800,
+              width: 'clamp(400px, 80vw, 800px)', 
+              height: 'clamp(400px, 80vw, 800px)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '50%',
               position: 'relative',
@@ -349,8 +417,6 @@ export default function Home() {
             }}
           >
             <div style={{ width: '80%', height: '80%', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '50%' }} />
-            <div style={{ position: 'absolute', width: '100%', height: 1, background: 'rgba(255,255,255,0.1)' }} />
-            <div style={{ position: 'absolute', width: 1, height: '100%', background: 'rgba(255,255,255,0.1)' }} />
           </motion.div>
         </div>
 
@@ -365,11 +431,11 @@ export default function Home() {
             borderRadius: 50,
             padding: '8px 20px',
             fontFamily: 'var(--font-heading)',
-            fontSize: 11,
+            fontSize: 10,
             letterSpacing: '0.2em',
             textTransform: 'uppercase',
             color: 'var(--aura-lavender)',
-            marginBottom: 32,
+            marginBottom: 24,
           }}
         >
           ✦ Premium Tarot Readings
@@ -382,12 +448,12 @@ export default function Home() {
           style={{
             fontFamily: 'var(--font-display)',
             fontWeight: 400,
-            fontSize: 'clamp(56px, 10vw, 120px)',
-            color: '#0a0a0c', // Pure dark for visibility
-            letterSpacing: '0.02em',
-            lineHeight: 1,
+            fontSize: 'clamp(48px, 12vw, 120px)',
+            color: '#0a0a0c',
+            letterSpacing: '0.01em',
+            lineHeight: 0.9,
             marginBottom: 24,
-            textShadow: '0 0 30px rgba(255,255,255,0.4)', // Subtle halo for extra pop
+            textShadow: '0 0 30px rgba(255,255,255,0.3)',
           }}
         >
           The Fifth Suit
@@ -399,37 +465,37 @@ export default function Home() {
           transition={{ delay: 0.6 }}
           style={{
             fontFamily: 'var(--font-body)',
-            fontWeight: 400, // Slightly bolder for legibility
-            fontSize: 18,
-            letterSpacing: '0.15em',
+            fontWeight: 400,
+            fontSize: 'clamp(14px, 4vw, 18px)',
+            letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            color: 'rgba(10, 10, 12, 0.8)', // Higher contrast
+            color: 'rgba(10, 10, 12, 0.8)',
             marginBottom: 40,
-            maxWidth: 600,
+            maxWidth: 500,
+            lineHeight: 1.6,
           }}
         >
-          Navigate the liminal spaces. <br/>
-          <span style={{ color: '#D63D5A', opacity: 1, fontWeight: 500 }}>Where the cards meet your destiny.</span>
+          Navigate the liminal spaces. <br className="hidden sm:block"/>
+          <span style={{ color: '#D63D5A', fontWeight: 600 }}>Where the cards meet your destiny.</span>
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}
+          style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}
         >
           <Link to="/booking" style={{ textDecoration: 'none' }}>
             <motion.button
-              whileHover={{ y: -5, boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}
+              whileHover={{ y: -5, boxShadow: '0 12px 40px rgba(0,0,0,0.1)' }}
               style={{
-                background: 'rgba(255,255,255,0.05)',
-                backdropFilter: 'blur(24px)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: '#0a0a0c',
+                border: 'none',
                 borderRadius: 14,
-                padding: '18px 40px',
-                color: 'var(--aura-white)',
+                padding: '18px 32px',
+                color: 'white',
                 fontFamily: 'var(--font-heading)',
-                fontSize: 14,
+                fontSize: 13,
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
@@ -440,16 +506,16 @@ export default function Home() {
           </Link>
           <Link to="/daily-draw" style={{ textDecoration: 'none' }}>
             <motion.button
-              whileHover={{ y: -5, background: 'rgba(255,255,255,0.08)' }}
+              whileHover={{ y: -5, background: 'rgba(255,255,255,0.6)' }}
               style={{
-                background: 'rgba(255,255,255,0.02)',
+                background: 'rgba(255,255,255,0.4)',
                 backdropFilter: 'blur(24px)',
-                border: '1px solid rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.5)',
                 borderRadius: 14,
-                padding: '18px 40px',
-                color: 'var(--aura-white)',
+                padding: '18px 32px',
+                color: '#0a0a0c',
                 fontFamily: 'var(--font-heading)',
-                fontSize: 14,
+                fontSize: 13,
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
@@ -462,8 +528,14 @@ export default function Home() {
       </section>
 
       {/* STATS */}
-      <section style={{ padding: '60px 0', background: 'rgba(255,255,255,0.01)', borderTop: '1px solid rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-        <div className="container-max" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 40, textAlign: 'center' }}>
+      <section style={{ padding: '80px 0', background: 'rgba(255,255,255,0.2)', borderTop: '1px solid rgba(255,255,255,0.3)', borderBottom: '1px solid rgba(255,255,255,0.3)' }}>
+        <div className="container-max" style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(2, 1fr)', 
+          '@media (min-width: 768px)': { gridTemplateColumns: 'repeat(4, 1fr)' }, // Note: Handled via Tailwind grid-cols
+          gap: 'clamp(24px, 5vw, 40px)', 
+          textAlign: 'center' 
+        }} className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { icon: Users, val: '5,000+', label: 'Souls Guided' },
             { icon: Star, val: '4.9/5', label: 'Celestial Rating' },
@@ -471,9 +543,9 @@ export default function Home() {
             { icon: Globe, val: 'Worldwide', label: 'Spiritual Reach' },
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-              <stat.icon size={24} style={{ color: 'var(--aura-lavender)', marginBottom: 16 }} />
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: 'var(--aura-white)', marginBottom: 4 }}>{stat.val}</p>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--aura-ghost)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{stat.label}</p>
+              <stat.icon size={20} style={{ color: '#D63D5A', marginBottom: 12, margin: '0 auto 12px' }} />
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(24px, 4vw, 32px)', color: '#0a0a0c', marginBottom: 4 }}>{stat.val}</p>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'rgba(10, 10, 12, 0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>{stat.label}</p>
             </motion.div>
           ))}
         </div>
@@ -482,29 +554,24 @@ export default function Home() {
       {/* ABOUT */}
       <section className="section-padding" style={{ position: 'relative', zIndex: 1 }}>
         <div className="container-max">
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: 80,
-            alignItems: 'center',
-          }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               style={{ display: 'flex', justifyContent: 'center' }}
             >
-              <div style={{ position: 'relative', width: 340, height: 440 }}>
-                <div style={{ position: 'absolute', inset: -20, border: '1px solid rgba(255,255,255,0.05)', borderRadius: 24, transform: 'rotate(-3deg)' }} />
-                <div style={{ position: 'absolute', inset: -20, border: '1px solid rgba(255,255,255,0.05)', borderRadius: 24, transform: 'rotate(2deg)' }} />
+              <div style={{ position: 'relative', width: 'min(100%, 340px)', aspectRatio: '340/440' }}>
+                <div style={{ position: 'absolute', inset: -15, border: '1px solid rgba(10,10,12,0.05)', borderRadius: 24, transform: 'rotate(-2deg)' }} />
+                <div style={{ position: 'absolute', inset: -15, border: '1px solid rgba(10,10,12,0.05)', borderRadius: 24, transform: 'rotate(1deg)' }} />
                 <div style={{
                   width: '100%',
                   height: '100%',
                   borderRadius: 24,
-                  background: 'rgba(255,255,255,0.03)',
-                  backdropFilter: 'blur(24px)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  boxShadow: '0 32px 64px rgba(0,0,0,0.4)',
+                  background: 'rgba(255,255,255,0.4)',
+                  backdropFilter: 'blur(32px)',
+                  border: '1px solid rgba(255,255,255,0.6)',
+                  boxShadow: '0 30px 60px rgba(0,0,0,0.05)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -512,28 +579,28 @@ export default function Home() {
                   position: 'relative',
                 }}>
                   <motion.div
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
                     transition={{ duration: 6, repeat: Infinity }}
-                    style={{ position: 'absolute', width: '80%', height: '80%', background: 'radial-gradient(circle, var(--aura-rose) 0%, transparent 70%)', filter: 'blur(60px)' }}
+                    style={{ position: 'absolute', width: '80%', height: '80%', background: 'radial-gradient(circle, #D63D5A 0%, transparent 70%)', filter: 'blur(60px)' }}
                   />
-                  <span style={{ fontSize: 96, opacity: 0.2 }}>✦</span>
+                  <span style={{ fontSize: 96, opacity: 0.1 }}>✦</span>
                 </div>
               </div>
             </motion.div>
 
             <div>
-              <SectionHeading subtitle="About the Reader" title="Seraphina Vael" />
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, lineHeight: 1.8, color: '#0a0a0c', marginBottom: 24, fontWeight: 450 }}>
+              <SectionHeading subtitle="The Reader" title="Seraphina Vael" />
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(15px, 2vw, 17px)', lineHeight: 1.8, color: 'rgba(10, 10, 12, 0.7)', marginBottom: 24, fontWeight: 450 }}>
                 For fifteen years, I have walked the liminal spaces between the seen and the unseen. The cards found me during a time of profound transformation, and they have been my companions, teachers, and mirrors ever since.
               </p>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, lineHeight: 1.8, color: '#0a0a0c', marginBottom: 32, fontWeight: 450 }}>
-                Each reading at TheFifthSuite is a sacred conversation — between you, the cards, and the deeper currents of your own knowing. I do not predict your future. I illuminate the present so clearly that the path forward reveals itself.
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(15px, 2vw, 17px)', lineHeight: 1.8, color: 'rgba(10, 10, 12, 0.7)', marginBottom: 32, fontWeight: 450 }}>
+                Each reading at TheFifthSuite is a sacred conversation. I do not predict your future. I illuminate the present so clearly that the path forward reveals itself.
               </p>
               <motion.button
                 whileHover={{ x: 10 }}
-                style={{ background: 'none', border: 'none', color: '#D63D5A', fontFamily: 'var(--font-heading)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 600 }}
+                style={{ background: 'none', border: 'none', color: '#D63D5A', fontFamily: 'var(--font-heading)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700 }}
               >
-                Learn More about the Craft →
+                Our Sacred Craft →
               </motion.button>
             </div>
           </div>
@@ -557,13 +624,12 @@ export default function Home() {
                 <SpectralTiltCard
                   key={type.id}
                   tintColor={type.color}
+                  bgGradient={type.bg}
                   style={{ 
                     padding: 40, 
                     display: 'flex', 
                     flexDirection: 'column', 
                     gap: 20, 
-                    background: 'rgba(255,255,255,0.03)',
-                    borderColor: 'rgba(255,255,255,0.05)'
                   }}
                 >
                   <div style={{

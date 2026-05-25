@@ -13,19 +13,43 @@ function shuffle(arr) {
   return a
 }
 
+function getCardImage(card) {
+  const baseUrl = 'https://raw.githubusercontent.com/searge/tarot/master/assets/img/big/'
+  if (card.arcana === 'major') {
+    const num = card.id.toString().padStart(2, '0')
+    return `${baseUrl}maj${num}.jpg`
+  }
+  
+  const suitMap = { wands: 'wands', cups: 'cups', swords: 'swords', pentacles: 'pents' }
+  const suit = suitMap[card.suit]
+  // Minor IDs start at 22, 36, 50, 64. Map to 01-14.
+  let offset = 0
+  if (card.suit === 'wands') offset = 22
+  if (card.suit === 'cups') offset = 36
+  if (card.suit === 'swords') offset = 50
+  if (card.suit === 'pentacles') offset = 64
+  
+  const num = (card.id - offset + 1).toString().padStart(2, '0')
+  return `${baseUrl}${suit}${num}.jpg`
+}
+
 function getCardGradient(card) {
-  if (card.arcana === 'major') return 'linear-gradient(135deg, #2d1b69, #1a0f40)'
-  if (card.suit === 'wands') return 'linear-gradient(135deg, #7c2d12, #1c0a00)'
-  if (card.suit === 'cups') return 'linear-gradient(135deg, #1e3a5f, #0a1628)'
-  if (card.suit === 'swords') return 'linear-gradient(135deg, #1f2937, #0f172a)'
-  return 'linear-gradient(135deg, #14532d, #052e16)'
+  const schemes = [
+    'radial-gradient(circle at center, #4A148C 0%, #8E24AA 40%, #F3E5F5 100%)', // Deep Purple Aura
+    'radial-gradient(circle at center, #1A237E 0%, #1976D2 40%, #E3F2FD 100%)', // Deep Blue Aura
+    'radial-gradient(circle at center, #B71C1C 0%, #D32F2F 40%, #FFEBEE 100%)', // Deep Red Aura
+    'radial-gradient(circle at center, #F57F17 0%, #FBC02D 40%, #FFFDE7 100%)', // Deep Yellow/Gold Aura
+    'radial-gradient(circle at center, #1B5E20 0%, #388E3C 40%, #E8F5E9 100%)', // Deep Green Aura
+    'radial-gradient(circle at center, #E65100 0%, #FB8C00 40%, #FFF3E0 100%)', // Deep Orange Aura
+  ]
+  return schemes[card.id % schemes.length]
 }
 
 // SVG mandala back pattern
 function CardBackSVG() {
   return (
-    <svg width="100%" height="100%" viewBox="0 0 80 130" style={{ position: 'absolute', inset: 0, opacity: 0.15 }}>
-      <g stroke="#c084fc" strokeWidth="0.5" fill="none">
+    <svg width="100%" height="100%" viewBox="0 0 80 130" style={{ position: 'absolute', inset: 0, opacity: 0.2 }}>
+      <g stroke="#FD6F88" strokeWidth="0.5" fill="none">
         <circle cx="40" cy="65" r="20" />
         <circle cx="40" cy="65" r="14" />
         <circle cx="40" cy="65" r="8" />
@@ -46,8 +70,16 @@ function CardBackSVG() {
   )
 }
 
-function TarotCard({ card, isSelected, isFlipped, onClick, index, isShuffling, scatterPos }) {
+function TarotCard({ card, isSelected, isFlipped, onClick, index, isShuffling, scatterPos, totalCards }) {
   const [hovered, setHovered] = useState(false)
+  const isMobile = window.innerWidth < 768
+
+  // Calculate position in the circle
+  const angle = (index / totalCards) * Math.PI * 2
+  const radius = isMobile ? window.innerWidth * 0.35 : 360
+  const x = Math.cos(angle) * radius
+  const y = Math.sin(angle) * radius
+  const baseRotation = (angle * 180) / Math.PI + 90
 
   return (
     <motion.div
@@ -60,29 +92,40 @@ function TarotCard({ card, isSelected, isFlipped, onClick, index, isShuffling, s
         x: scatterPos.x,
         y: scatterPos.y,
         rotate: scatterPos.rotate,
-        scale: 0.85,
+        scale: isMobile ? 0.7 : 0.85,
         opacity: 0.7,
+        zIndex: 0,
+      } : isSelected ? {
+        x: 0, y: 0, rotate: 0, scale: isMobile ? 1 : 1.2, opacity: 0, pointerEvents: 'none' 
       } : {
-        x: 0, y: 0, rotate: 0,
-        scale: hovered && !isSelected ? 1.05 : 1,
+        x, y,
+        rotate: baseRotation,
+        scale: hovered ? 1.15 : 1,
         opacity: 1,
-        y: hovered && !isSelected ? -8 : 0,
+        zIndex: hovered ? 100 : 1,
       }}
       transition={isShuffling
         ? { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }
-        : { type: 'spring', stiffness: 200, damping: 25 }
+        : { type: 'spring', stiffness: 150, damping: 20 }
       }
       style={{
-        width: 56,
-        height: 90,
-        borderRadius: 8,
+        width: isMobile ? 60 : 80,
+        height: isMobile ? 96 : 128,
+        borderRadius: isMobile ? 8 : 10,
         cursor: isShuffling ? 'default' : 'pointer',
-        position: 'relative',
-        flexShrink: 0,
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        marginLeft: isMobile ? -30 : -40,
+        marginTop: isMobile ? -48 : -64,
+        transformStyle: 'preserve-3d',
       }}
     >
       <motion.div
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        animate={{
+          rotateY: isFlipped ? 180 : 0,
+        }}
+        whileTap={{ scale: 1.6, zIndex: 1000 }} // Zoom on click
         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         style={{ width: '100%', height: '100%', transformStyle: 'preserve-3d', position: 'relative' }}
       >
@@ -90,12 +133,12 @@ function TarotCard({ card, isSelected, isFlipped, onClick, index, isShuffling, s
         <div style={{
           position: 'absolute',
           inset: 0,
-          borderRadius: 8,
-          background: 'linear-gradient(135deg, #1e1040, #0f0828)',
-          border: isSelected ? '1px solid rgba(192,132,252,0.8)' : '1px solid rgba(255,255,255,0.15)',
-          boxShadow: isSelected
-            ? '0 0 20px rgba(192,132,252,0.6), 0 4px 20px rgba(0,0,0,0.5)'
-            : '0 4px 12px rgba(0,0,0,0.4)',
+          borderRadius: 10,
+          background: getCardGradient(card),
+          border: isSelected ? '1.5px solid #FD6F88' : '1px solid rgba(253, 111, 136, 0.2)',
+          boxShadow: hovered
+            ? '0 12px 32px rgba(0,0,0,0.2)'
+            : '0 4px 12px rgba(0,0,0,0.08)',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
           overflow: 'hidden',
@@ -105,7 +148,7 @@ function TarotCard({ card, isSelected, isFlipped, onClick, index, isShuffling, s
           <div style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%)',
+            background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)',
           }} />
         </div>
 
@@ -113,10 +156,10 @@ function TarotCard({ card, isSelected, isFlipped, onClick, index, isShuffling, s
         <div style={{
           position: 'absolute',
           inset: 0,
-          borderRadius: 8,
+          borderRadius: 10,
           background: getCardGradient(card),
-          border: '1px solid rgba(255,255,255,0.2)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+          border: '1px solid rgba(253, 111, 136, 0.2)',
+          boxShadow: '0 4px 20px rgba(253, 111, 136, 0.1)',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
           transform: 'rotateY(180deg)',
@@ -124,19 +167,33 @@ function TarotCard({ card, isSelected, isFlipped, onClick, index, isShuffling, s
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: 4,
+          padding: 0,
           overflow: 'hidden',
         }}>
-          <p style={{
-            fontFamily: 'var(--font-heading)',
-            fontSize: 5,
-            color: 'rgba(255,255,255,0.8)',
+          <img 
+            src={getCardImage(card)} 
+            alt={card.name} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          />
+          <div style={{
+            position: 'absolute',
+            bottom: 0, left: 0, right: 0,
+            background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
+            padding: '8px 4px 4px',
             textAlign: 'center',
-            letterSpacing: '0.05em',
-            lineHeight: 1.2,
           }}>
-            {card.name}
-          </p>
+            <p style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: 7,
+              color: 'white',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+              lineHeight: 1.2,
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+            }}>
+              {card.name}
+            </p>
+          </div>
         </div>
       </motion.div>
 
@@ -149,7 +206,7 @@ function TarotCard({ card, isSelected, isFlipped, onClick, index, isShuffling, s
             position: 'absolute',
             inset: -3,
             borderRadius: 10,
-            border: '2px solid rgba(192,132,252,0.7)',
+            border: '2px solid #FD6F88',
             pointerEvents: 'none',
           }}
         />
@@ -159,33 +216,47 @@ function TarotCard({ card, isSelected, isFlipped, onClick, index, isShuffling, s
 }
 
 function SelectedSlot({ card, position, label }) {
+  const isMobile = window.innerWidth < 768
   const labels = ['Past', 'Present', 'Future']
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
       <div style={{
-        width: 80,
-        height: 130,
-        borderRadius: 12,
-        border: card ? '1px solid rgba(192,132,252,0.6)' : '1px dashed rgba(255,255,255,0.2)',
-        background: card ? getCardGradient(card) : 'rgba(255,255,255,0.02)',
+        width: isMobile ? 80 : 110,
+        height: isMobile ? 128 : 176,
+        borderRadius: isMobile ? 10 : 14,
+        border: card ? '2px solid #FD6F88' : '1px dashed rgba(253, 111, 136, 0.3)',
+        background: card ? getCardGradient(card) : 'radial-gradient(circle at center, rgba(0,0,0,0.05) 0%, rgba(255, 255, 255, 0.3) 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
         overflow: 'hidden',
-        transition: 'all 0.3s',
+        transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        boxShadow: card ? '0 12px 40px rgba(0,0,0,0.15)' : 'none',
       }}>
         {card ? (
-          <div style={{ padding: 6, textAlign: 'center' }}>
-            <p style={{ fontFamily: 'var(--font-heading)', fontSize: 7, color: 'rgba(255,255,255,0.9)', lineHeight: 1.3 }}>
-              {card.name}
-            </p>
+          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <img 
+              src={getCardImage(card)} 
+              alt={card.name} 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            />
+            <div style={{
+              position: 'absolute',
+              bottom: 0, left: 0, right: 0,
+              background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)',
+              padding: isMobile ? '8px 4px 4px' : '16px 8px 8px',
+            }}>
+              <p style={{ fontFamily: 'var(--font-heading)', fontSize: isMobile ? 7 : 9, color: 'white', fontWeight: 700, lineHeight: 1.3, textAlign: 'center' }}>
+                {card.name}
+              </p>
+            </div>
           </div>
         ) : (
-          <span style={{ fontSize: 20, opacity: 0.2 }}>✦</span>
+          <span style={{ fontSize: isMobile ? 16 : 24, color: '#FD6F88', opacity: 0.3 }}>✦</span>
         )}
       </div>
-      <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--aura-ghost)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+      <span style={{ fontFamily: 'var(--font-body)', fontSize: isMobile ? 10 : 12, color: '#1a0a0a', opacity: 0.6, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500 }}>
         {labels[position]}
       </span>
     </div>
@@ -196,12 +267,12 @@ function EnergyGauge({ rating }) {
   const circumference = 2 * Math.PI * 54
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-      <p style={{ fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.15em', color: 'var(--aura-ghost)', textTransform: 'uppercase' }}>
+      <p style={{ fontFamily: 'var(--font-heading)', fontSize: 12, letterSpacing: '0.15em', color: '#1a0a0a', opacity: 0.7, textTransform: 'uppercase' }}>
         Today's Energy
       </p>
       <div style={{ position: 'relative', width: 120, height: 120 }}>
         <svg width="120" height="120" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+          <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(49, 27, 146, 0.1)" strokeWidth="8" />
           <motion.circle
             cx="60" cy="60" r="54"
             fill="none"
@@ -216,8 +287,8 @@ function EnergyGauge({ rating }) {
           />
           <defs>
             <linearGradient id="energyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#67e8f9" />
-              <stop offset="100%" stopColor="#c084fc" />
+              <stop offset="0%" stopColor="#8E24AA" />
+              <stop offset="100%" stopColor="#1976D2" />
             </linearGradient>
           </defs>
         </svg>
@@ -229,11 +300,11 @@ function EnergyGauge({ rating }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: 'white', lineHeight: 1 }}
+            style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: '#1a0a0a', lineHeight: 1 }}
           >
             {rating}
           </motion.span>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--aura-ghost)' }}>/10</span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: '#1a0a0a', opacity: 0.5 }}>/10</span>
         </div>
       </div>
     </div>
@@ -387,14 +458,14 @@ export default function DailyDraw() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            style={{ fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: '0.2em', color: 'var(--aura-lavender)', textTransform: 'uppercase', marginBottom: 12 }}
+            style={{ fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: '0.2em', color: '#FD6F88', textTransform: 'uppercase', marginBottom: 12 }}
           >
             ✦ Daily Draw
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(32px, 5vw, 52px)', color: 'white', marginBottom: 12 }}
+            style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(32px, 5vw, 52px)', color: '#1a0a0a', marginBottom: 12 }}
           >
             Let the Cards Speak
           </motion.h1>
@@ -402,7 +473,7 @@ export default function DailyDraw() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--aura-ghost)' }}
+            style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: '#1a0a0a', opacity: 0.7 }}
           >
             {selectedCards.length === 0
               ? 'Shuffle, then choose three cards that call to you'
@@ -416,8 +487,8 @@ export default function DailyDraw() {
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          gap: 24,
-          padding: '16px 24px 24px',
+          gap: window.innerWidth < 768 ? 12 : 24,
+          padding: window.innerWidth < 768 ? '12px 16px 20px' : '16px 24px 24px',
         }}>
           {[0, 1, 2].map(i => (
             <SelectedSlot key={i} card={selectedCards[i]} position={i} />
@@ -427,17 +498,17 @@ export default function DailyDraw() {
         {/* Controls */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, padding: '0 24px 24px' }}>
           <motion.button
-            whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(192,132,252,0.3)' }}
+            whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(253,111,136,0.2)' }}
             whileTap={{ scale: 0.96 }}
             onClick={doShuffle}
             disabled={isShuffling}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '12px 24px',
-              background: 'rgba(192,132,252,0.1)',
-              border: '1px solid rgba(192,132,252,0.4)',
+              background: 'rgba(253,111,136,0.1)',
+              border: '1px solid rgba(253,111,136,0.4)',
               borderRadius: 12,
-              color: 'white',
+              color: '#1a0a0a',
               fontFamily: 'var(--font-heading)',
               fontSize: 12,
               letterSpacing: '0.12em',
@@ -464,10 +535,10 @@ export default function DailyDraw() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '12px 20px',
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.15)',
+                background: 'rgba(255, 255, 255, 0.4)',
+                border: '1px solid rgba(253, 111, 136, 0.2)',
                 borderRadius: 12,
-                color: 'var(--aura-ghost)',
+                color: '#1a0a0a',
                 fontFamily: 'var(--font-heading)',
                 fontSize: 12,
                 letterSpacing: '0.12em',
@@ -492,21 +563,21 @@ export default function DailyDraw() {
               style={{ display: 'flex', justifyContent: 'center', padding: '0 24px 24px' }}
             >
               <motion.button
-                whileHover={{ y: -3, boxShadow: '0 12px 40px rgba(192,132,252,0.5)' }}
+                whileHover={{ y: -3, boxShadow: '0 12px 40px rgba(253,111,136,0.3)' }}
                 onClick={fetchReading}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '16px 40px',
-                  background: 'rgba(192,132,252,0.15)',
-                  border: '1px solid rgba(192,132,252,0.7)',
+                  background: 'rgba(253,111,136,0.15)',
+                  border: '1px solid rgba(253,111,136,0.6)',
                   borderRadius: 14,
-                  color: 'white',
+                  color: '#1a0a0a',
                   fontFamily: 'var(--font-heading)',
                   fontSize: 14,
                   letterSpacing: '0.15em',
                   textTransform: 'uppercase',
                   cursor: 'pointer',
-                  boxShadow: '0 0 40px rgba(192,132,252,0.2)',
+                  boxShadow: '0 0 40px rgba(253,111,136,0.1)',
                   transition: 'all 0.2s',
                 }}
               >
@@ -517,28 +588,42 @@ export default function DailyDraw() {
           )}
         </AnimatePresence>
 
-        {/* Card grid */}
+        {/* Card Ring Container */}
         <div style={{
-          padding: '0 16px 120px',
+          height: window.innerWidth < 768 ? 420 : 850,
+          position: 'relative',
           display: 'flex',
-          flexWrap: 'wrap',
-          gap: 8,
+          alignItems: 'center',
           justifyContent: 'center',
-          maxWidth: 1200,
-          margin: '0 auto',
+          perspective: 2000,
+          margin: window.innerWidth < 768 ? '20px auto 0' : '40px auto 0',
+          width: '100%',
+          overflow: 'hidden',
         }}>
-          {cards.map((card, index) => (
-            <TarotCard
-              key={card.id}
-              card={card}
-              isSelected={selectedCards.some(c => c.id === card.id)}
-              isFlipped={flippedCards.includes(card.id)}
-              onClick={handleCardClick}
-              index={index}
-              isShuffling={isShuffling}
-              scatterPos={scatterPositions[card.id]}
-            />
-          ))}
+          <motion.div
+            animate={isShuffling ? { rotate: 0 } : { rotate: 360 }}
+            transition={isShuffling ? { duration: 0.5 } : { duration: 180, repeat: Infinity, ease: 'linear' }}
+            style={{
+              position: 'relative',
+              width: 0,
+              height: 0,
+              transformStyle: 'preserve-3d',
+            }}
+          >
+            {cards.map((card, index) => (
+              <TarotCard
+                key={card.id}
+                card={card}
+                isSelected={selectedCards.some(c => c.id === card.id)}
+                isFlipped={flippedCards.includes(card.id)}
+                onClick={handleCardClick}
+                index={index}
+                totalCards={cards.length}
+                isShuffling={isShuffling}
+                scatterPos={scatterPositions[card.id]}
+              />
+            ))}
+          </motion.div>
         </div>
       </div>
 
@@ -555,9 +640,9 @@ export default function DailyDraw() {
               inset: 0,
               zIndex: 50,
               overflowY: 'auto',
-              background: 'rgba(7,6,15,0.92)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
+              background: 'rgba(252, 234, 240, 0.95)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
               padding: '80px 24px 60px',
             }}
           >
@@ -568,11 +653,11 @@ export default function DailyDraw() {
                   whileHover={{ scale: 1.1 }}
                   onClick={() => setShowReading(false)}
                   style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.15)',
+                    background: 'rgba(255, 255, 255, 0.6)',
+                    border: '1px solid rgba(253, 111, 136, 0.2)',
                     borderRadius: 50,
                     padding: 8,
-                    color: 'var(--aura-ghost)',
+                    color: '#1a0a0a',
                     cursor: 'pointer',
                     display: 'flex',
                   }}
@@ -582,31 +667,52 @@ export default function DailyDraw() {
               </div>
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 42, textAlign: 'center', marginBottom: 40, color: 'white' }}>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: 'clamp(32px, 8vw, 42px)', textAlign: 'center', marginBottom: 32, color: '#1a0a0a' }}>
                   Your Reading
                 </h2>
 
                 {/* Three cards display */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 48 }}>
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center', 
+                  gap: window.innerWidth < 768 ? 24 : 32, 
+                  marginBottom: 48 
+                }}>
                   {selectedCards.map((card, i) => (
-                    <div key={card.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                    <div key={card.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                       <div style={{
-                        width: 90,
-                        height: 148,
-                        borderRadius: 12,
+                        width: window.innerWidth < 768 ? 100 : 140,
+                        height: window.innerWidth < 768 ? 160 : 224,
+                        borderRadius: 16,
                         background: getCardGradient(card),
-                        border: '1px solid rgba(192,132,252,0.4)',
-                        boxShadow: '0 8px 30px rgba(0,0,0,0.5), 0 0 20px rgba(192,132,252,0.2)',
+                        border: '2px solid #FD6F88',
+                        boxShadow: '0 12px 48px rgba(253, 111, 136, 0.25)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        padding: 8,
+                        padding: 0,
+                        overflow: 'hidden',
+                        position: 'relative',
                       }}>
-                        <p style={{ fontFamily: 'var(--font-heading)', fontSize: 8, color: 'rgba(255,255,255,0.9)', textAlign: 'center', lineHeight: 1.3 }}>
-                          {card.name}
-                        </p>
+                        <img 
+                          src={getCardImage(card)} 
+                          alt={card.name} 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        />
+                        <div style={{
+                          position: 'absolute',
+                          bottom: 0, left: 0, right: 0,
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)',
+                          padding: '16px 6px 8px',
+                        }}>
+                          <p style={{ fontFamily: 'var(--font-heading)', fontSize: 10, color: 'white', fontWeight: 700, textAlign: 'center', lineHeight: 1.3 }}>
+                            {card.name}
+                          </p>
+                        </div>
                       </div>
-                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--aura-lavender)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#FD6F88', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 600 }}>
                         {['Past', 'Present', 'Future'][i]}
                       </span>
                     </div>
@@ -614,15 +720,15 @@ export default function DailyDraw() {
                 </div>
 
                 {/* Reading text */}
-                <div className="glass" style={{ padding: 40, marginBottom: 40 }}>
+                <div className="glass" style={{ padding: 'clamp(24px, 6vw, 40px)', marginBottom: 40, background: 'rgba(255, 255, 255, 0.6)' }}>
                   {loadingReading ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       {[100, 85, 70, 90, 60].map((w, i) => (
-                        <div key={i} className="shimmer" style={{ height: 16, borderRadius: 8, width: `${w}%` }} />
+                        <div key={i} className="shimmer" style={{ height: 16, borderRadius: 8, width: `${w}%`, background: 'rgba(253, 111, 136, 0.1)' }} />
                       ))}
                     </div>
                   ) : (
-                    <div style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.9, color: 'var(--aura-ghost)' }}>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(14px, 4vw, 15px)', lineHeight: 1.8, color: '#1a0a0a' }}>
                       <TypewriterText text={readingText} />
                     </div>
                   )}
@@ -635,7 +741,7 @@ export default function DailyDraw() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
                     className="glass"
-                    style={{ padding: 32, display: 'flex', justifyContent: 'center' }}
+                    style={{ padding: 32, display: 'flex', justifyContent: 'center', background: 'rgba(255, 255, 255, 0.6)' }}
                   >
                     <EnergyGauge rating={Math.round(energyRating * 10) / 10} />
                   </motion.div>
@@ -648,10 +754,10 @@ export default function DailyDraw() {
                     onClick={() => setShowReading(false)}
                     style={{
                       padding: '12px 28px',
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.2)',
+                      background: 'rgba(255, 255, 255, 0.6)',
+                      border: '1px solid rgba(253, 111, 136, 0.2)',
                       borderRadius: 12,
-                      color: 'var(--aura-ghost)',
+                      color: '#1a0a0a',
                       fontFamily: 'var(--font-heading)',
                       fontSize: 12,
                       letterSpacing: '0.12em',
@@ -665,10 +771,10 @@ export default function DailyDraw() {
                     disabled
                     style={{
                       padding: '12px 28px',
-                      background: 'rgba(255,255,255,0.02)',
-                      border: '1px solid rgba(255,255,255,0.1)',
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      border: '1px solid rgba(0,0,0,0.05)',
                       borderRadius: 12,
-                      color: 'rgba(255,255,255,0.2)',
+                      color: 'rgba(0,0,0,0.3)',
                       fontFamily: 'var(--font-heading)',
                       fontSize: 12,
                       letterSpacing: '0.12em',
@@ -687,3 +793,4 @@ export default function DailyDraw() {
     </div>
   )
 }
+
