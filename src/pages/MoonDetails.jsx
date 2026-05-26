@@ -63,14 +63,26 @@ const phaseDescriptions = {
 }
 
 function StarField() {
-  const stars = useMemo(() => Array.from({ length: 60 }).map((_, i) => ({
-    id: i,
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    size: Math.random() * 1.5 + 0.5,
-    duration: Math.random() * 3 + 2,
-    delay: Math.random() * 5,
-  })), [])
+  const [isMobile, setIsMobile] = React.useState(false)
+
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const stars = useMemo(() => {
+    const count = isMobile ? 25 : 60
+    return Array.from({ length: count }).map((_, i) => ({
+      id: i,
+      top: `${Math.random() * 100}%`,
+      left: `${Math.random() * 100}%`,
+      size: Math.random() * 1.5 + 0.5,
+      duration: Math.random() * 3 + 2,
+      delay: Math.random() * 5,
+    }))
+  }, [isMobile])
 
   return (
     <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
@@ -87,6 +99,7 @@ function StarField() {
             height: star.size,
             background: 'var(--aura-angel-pink)',
             borderRadius: '50%',
+            willChange: 'opacity',
           }}
         />
       ))}

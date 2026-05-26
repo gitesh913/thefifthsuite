@@ -14,6 +14,14 @@ export default function Navbar() {
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [bookOpen, setBookOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     if (!mobileOpen) return
@@ -38,9 +46,9 @@ export default function Navbar() {
       }}>
         <div style={{
           height: '64px',
-          background: 'rgba(255, 255, 255, 0.4)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          background: isMobile ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.4)',
+          backdropFilter: isMobile ? 'blur(8px)' : 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: isMobile ? 'blur(8px)' : 'blur(20px) saturate(180%)',
           borderRadius: 24,
           border: '1px solid rgba(253, 111, 136, 0.2)',
           boxShadow: '0 8px 32px 0 rgba(253, 111, 136, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.4)',
@@ -172,9 +180,9 @@ export default function Navbar() {
             height: 44,
             borderRadius: '50%',
             border: '1px solid rgba(253, 111, 136, 0.2)',
-            background: 'rgba(255, 255, 255, 0.55)',
-            backdropFilter: 'blur(18px)',
-            WebkitBackdropFilter: 'blur(18px)',
+            background: 'rgba(255, 255, 255, 0.75)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             boxShadow: '0 8px 20px rgba(253, 111, 136, 0.12)',
             alignItems: 'center',
             justifyContent: 'center',
@@ -196,18 +204,18 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            initial={{ opacity: 0, x: '10%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '10%' }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
             onClick={() => setMobileOpen(false)}
             style={{
               position: 'fixed',
               inset: 0,
               zIndex: 200,
-              background: 'rgba(252, 234, 240, 0.55)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
+              background: 'rgba(252, 234, 240, 0.75)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
               display: 'flex',
               justifyContent: 'flex-end',
             }}

@@ -18,6 +18,14 @@ const answers = [
 export default function BookOfAnswers({ isOpen, onClose }) {
   const [phase, setPhase] = useState('opening'); // opening, ready, flipping, result
   const [answer, setAnswer] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Transition from opening cover to ready for interaction
   useEffect(() => {
@@ -58,7 +66,7 @@ export default function BookOfAnswers({ isOpen, onClose }) {
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        backdropFilter: 'blur(30px)',
+        backdropFilter: isMobile ? 'blur(10px)' : 'blur(30px)',
       }}
     >
       {/* Background Ambience */}
@@ -68,7 +76,7 @@ export default function BookOfAnswers({ isOpen, onClose }) {
           width: '100vw', height: '100vh',
           background: 'radial-gradient(circle at center, rgba(253, 111, 136, 0.15) 0%, transparent 70%)',
           transform: 'translate(-50%, -50%)',
-          filter: 'blur(120px)',
+          filter: isMobile ? 'blur(60px)' : 'blur(120px)',
         }} />
         <div style={{
           position: 'absolute', inset: 0,

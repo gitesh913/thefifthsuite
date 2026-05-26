@@ -341,6 +341,7 @@ function TypewriterText({ text, speed = 18 }) {
 }
 
 export default function DailyDraw() {
+  const [isMobile, setIsMobile] = useState(false)
   const [cards, setCards] = useState(() => shuffle(tarotDeck))
   const [isShuffling, setIsShuffling] = useState(false)
   const [selectedCards, setSelectedCards] = useState([])
@@ -350,6 +351,15 @@ export default function DailyDraw() {
   const [readingText, setReadingText] = useState('')
   const [loadingReading, setLoadingReading] = useState(false)
   const [energyRating, setEnergyRating] = useState(null)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const displayCards = isMobile ? cards.slice(0, 24) : cards
 
   const doShuffle = useCallback(async () => {
     if (isShuffling) return
@@ -590,19 +600,19 @@ export default function DailyDraw() {
 
         {/* Card Ring Container */}
         <div style={{
-          height: window.innerWidth < 768 ? 420 : 850,
+          height: isMobile ? 420 : 850,
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           perspective: 2000,
-          margin: window.innerWidth < 768 ? '20px auto 0' : '40px auto 0',
+          margin: isMobile ? '20px auto 0' : '40px auto 0',
           width: '100%',
           overflow: 'hidden',
         }}>
           <motion.div
             animate={isShuffling ? { rotate: 0 } : { rotate: 360 }}
-            transition={isShuffling ? { duration: 0.5 } : { duration: 180, repeat: Infinity, ease: 'linear' }}
+            transition={isShuffling ? { duration: 0.5 } : { duration: 300, repeat: Infinity, ease: 'linear' }} // Slower rotation is cheaper
             style={{
               position: 'relative',
               width: 0,
@@ -610,7 +620,7 @@ export default function DailyDraw() {
               transformStyle: 'preserve-3d',
             }}
           >
-            {cards.map((card, index) => (
+            {displayCards.map((card, index) => (
               <TarotCard
                 key={card.id}
                 card={card}
@@ -618,7 +628,7 @@ export default function DailyDraw() {
                 isFlipped={flippedCards.includes(card.id)}
                 onClick={handleCardClick}
                 index={index}
-                totalCards={cards.length}
+                totalCards={displayCards.length}
                 isShuffling={isShuffling}
                 scatterPos={scatterPositions[card.id]}
               />

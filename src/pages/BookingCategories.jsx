@@ -10,6 +10,14 @@ const iconMap = { Heart, Briefcase, Sparkles, Navigation, Leaf, Clock }
 export default function BookingCategories() {
   const navigate = useNavigate()
   const [hoveredColor, setHoveredColor] = useState(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   return (
     <div className="page-wrapper" style={{ minHeight: '100vh', position: 'relative' }}>
@@ -66,15 +74,15 @@ export default function BookingCategories() {
                   onHoverStart={() => setHoveredColor(cat.auroraColor)}
                   onHoverEnd={() => setHoveredColor(null)}
                   onClick={() => navigate(`/booking/${cat.id}`, { state: { category: cat } })}
-                  whileHover={{ 
+                  whileHover={isMobile ? {} : { 
                     y: -8, 
                     scale: 1.02,
                   }}
                   style={{
                     position: 'relative',
-                    background: cat.gradient,
-                    backdropFilter: 'blur(32px)',
-                    WebkitBackdropFilter: 'blur(32px)',
+                    background: isMobile ? 'rgba(255, 255, 255, 0.8)' : cat.gradient,
+                    backdropFilter: isMobile ? 'blur(10px)' : 'blur(32px)',
+                    WebkitBackdropFilter: isMobile ? 'blur(10px)' : 'blur(32px)',
                     border: '1px solid rgba(255, 255, 255, 0.25)',
                     borderRadius: 24,
                     padding: 'clamp(24px, 5vw, 40px)',

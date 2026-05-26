@@ -72,12 +72,20 @@ const phaseDescriptions = {
 }
 
 function MoonPhaseWidget({ compact = false, className = '', style = {} }) {
+  const [isMobile, setIsMobile] = React.useState(false)
   const { phaseName, illumination, moonAge } = getMoonPhase()
+
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   return (
     <Link to="/moon-details" style={{ textDecoration: 'none', ...style }} className={className}>
       <motion.div
-        whileHover={compact ? { scale: 1.03 } : { scale: 1.02, y: -4 }}
+        whileHover={isMobile ? {} : (compact ? { scale: 1.03 } : { scale: 1.02, y: -4 })}
         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         style={{
           position: 'relative',
@@ -85,9 +93,9 @@ function MoonPhaseWidget({ compact = false, className = '', style = {} }) {
           flexDirection: compact ? 'row' : 'column',
           alignItems: compact ? 'center' : 'center',
           gap: compact ? 12 : 0,
-          background: 'rgba(255, 255, 255, 0.5)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+          background: isMobile ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)',
+          backdropFilter: isMobile ? 'blur(8px)' : 'blur(16px)',
+          WebkitBackdropFilter: isMobile ? 'blur(8px)' : 'blur(16px)',
           border: '1px solid rgba(253, 111, 136, 0.2)',
           borderRadius: compact ? 22 : 28,
           padding: compact ? '14px 14px 14px 12px' : '32px 24px',

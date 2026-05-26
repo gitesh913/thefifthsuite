@@ -36,6 +36,14 @@ export default function BookingForm() {
   const { categoryId } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
+  const [isMobile, setIsMobile] = useState(false)
+
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const category = location.state?.category ||
     bookingCategories.find(c => c.id === categoryId) ||
@@ -87,7 +95,8 @@ export default function BookingForm() {
     width: '100%',
     outline: 'none',
     fontSize: 15,
-    backdropFilter: 'blur(12px)',
+    backdropFilter: isMobile ? 'none' : 'blur(12px)',
+    WebkitBackdropFilter: isMobile ? 'none' : 'blur(12px)',
     transition: 'all 0.3s ease',
   })
 
@@ -104,7 +113,7 @@ export default function BookingForm() {
           background: category.color, 
           pointerEvents: 'none', 
           zIndex: 0,
-          filter: 'blur(100px)'
+          filter: isMobile ? 'blur(40px)' : 'blur(100px)'
         }} 
       />
 

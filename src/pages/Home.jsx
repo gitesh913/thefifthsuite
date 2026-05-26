@@ -10,6 +10,7 @@ const iconMap = { Zap, Clock, Calendar, CalendarRange }
 // --- ENHANCED COMPONENTS ---
 
 function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#fff', bgGradient = 'rgba(255, 255, 255, 0.6)' }) {
+  const [isMobile, setIsMobile] = useState(false)
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const mouseXSpring = useSpring(x)
@@ -17,7 +18,15 @@ function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#
   const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ['10deg', '-10deg'])
   const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ['-10deg', '10deg'])
 
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   const handleMouseMove = (e) => {
+    if (isMobile) return
     const rect = e.currentTarget.getBoundingClientRect()
     const width = rect.width
     const height = rect.height
@@ -39,13 +48,13 @@ function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
-        rotateX,
-        rotateY,
+        rotateX: isMobile ? 0 : rotateX,
+        rotateY: isMobile ? 0 : rotateY,
         transformStyle: 'preserve-3d',
         position: 'relative',
         ...style,
       }}
-      whileHover={{ 
+      whileHover={isMobile ? {} : { 
         scale: 1.02,
         y: -8,
         borderColor: 'rgba(255,255,255,0.8)',
@@ -55,23 +64,25 @@ function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#
       className={`glass ${className}`}
     >
       {/* Intense Reflection Overlay */}
-      <motion.div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: `linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 40%, transparent 60%, ${tintColor}22 100%)`,
-          zIndex: 0,
-          borderRadius: 'inherit',
-        }}
-      />
+      {!isMobile && (
+        <motion.div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: `linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 40%, transparent 60%, ${tintColor}22 100%)`,
+            zIndex: 0,
+            borderRadius: 'inherit',
+          }}
+        />
+      )}
       
       {/* Background glass saturation - Luxury Aesthetic */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: bgGradient,
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
+        background: isMobile ? 'rgba(255, 255, 255, 0.85)' : bgGradient,
+        backdropFilter: isMobile ? 'blur(8px)' : 'blur(20px)',
+        WebkitBackdropFilter: isMobile ? 'blur(8px)' : 'blur(20px)',
         border: '1px solid rgba(255, 255, 255, 0.4)',
         boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.6), 0 10px 30px rgba(0,0,0,0.05)',
         zIndex: -1,
@@ -79,25 +90,28 @@ function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#
       }} />
       
       {/* Content */}
-      <div style={{ transform: 'translateZ(30px)', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 2 }}>
+      <div style={{ transform: isMobile ? 'none' : 'translateZ(30px)', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 2 }}>
         {children}
       </div>
 
       {/* Shine effect */}
-      <motion.div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.6) 45%, rgba(255,255,255,0.6) 50%, transparent 55%)',
-          zIndex: 1,
-          opacity: 0,
-          borderRadius: 'inherit',
-        }}
-        whileHover={{ opacity: 0.4, left: ['-100%', '100%'] }}
-        transition={{ duration: 1, ease: "easeInOut" }}
-      />
+      {!isMobile && (
+        <motion.div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.6) 45%, rgba(255,255,255,0.6) 50%, transparent 55%)',
+            zIndex: 1,
+            opacity: 0,
+            borderRadius: 'inherit',
+          }}
+          whileHover={{ opacity: 0.4, left: ['-100%', '100%'] }}
+          transition={{ duration: 1, ease: "easeInOut" }}
+        />
+      )}
     </motion.div>
   )
+}
 }
 
 function ShootingStar() {
@@ -141,9 +155,19 @@ function ShootingStar() {
 }
 
 function SolarSystemBackground() {
+  const [isMobile, setIsMobile] = useState(false)
   const { scrollY } = useScroll()
   const yParallax = useTransform(scrollY, [0, 2000], [0, 400])
   const scaleParallax = useTransform(scrollY, [0, 1000], [1, 1.1])
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  if (isMobile) return null
 
   const planets = [
     { name: 'Mercury', size: 4, dist: 100, speed: 12, color: '#A5A5A5' },
@@ -237,22 +261,34 @@ function SolarSystemBackground() {
 }
 
 function StarField() {
-  const stars = useMemo(() => Array.from({ length: 120 }).map((_, i) => ({
-    id: i,
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    size: Math.random() * 2.5 + 0.5,
-    duration: Math.random() * 3 + 2,
-    delay: Math.random() * 5,
-    color: Math.random() > 0.8 ? 'var(--aura-lavender)' : Math.random() > 0.9 ? 'var(--aura-teal)' : 'white'
-  })), [])
+  const [isMobile, setIsMobile] = useState(false)
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const stars = useMemo(() => {
+    const count = isMobile ? 40 : 120
+    return Array.from({ length: count }).map((_, i) => ({
+      id: i,
+      top: `${Math.random() * 100}%`,
+      left: `${Math.random() * 100}%`,
+      size: Math.random() * 2.5 + 0.5,
+      duration: Math.random() * 3 + 2,
+      delay: Math.random() * 5,
+      color: Math.random() > 0.8 ? 'var(--aura-lavender)' : Math.random() > 0.9 ? 'var(--aura-teal)' : 'white'
+    }))
+  }, [isMobile])
 
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
       {stars.map(star => (
         <motion.div
           key={star.id}
-          animate={{ opacity: [0.1, 0.8, 0.1], scale: [1, 1.2, 1] }}
+          animate={isMobile ? { opacity: [0.2, 0.6, 0.2] } : { opacity: [0.1, 0.8, 0.1], scale: [1, 1.2, 1] }}
           transition={{ duration: star.duration, repeat: Infinity, delay: star.delay }}
           style={{
             position: 'absolute',
@@ -262,7 +298,8 @@ function StarField() {
             height: star.size,
             background: star.color,
             borderRadius: '50%',
-            boxShadow: `0 0 ${star.size * 2}px ${star.color}`,
+            boxShadow: star.size > 1 ? `0 0 ${star.size * 2}px ${star.color}` : 'none',
+            willChange: 'opacity',
           }}
         />
       ))}
