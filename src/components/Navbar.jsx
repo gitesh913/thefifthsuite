@@ -7,7 +7,7 @@ import { useIsMobile } from '../utils/hooks'
 
 const navLinks = [
   { label: 'Home', path: '/', icon: Home },
-  { label: 'Book', path: '/booking', icon: Sparkles },
+  { label: 'Session', path: '/booking', icon: Sparkles },
   { label: 'Draw', path: '/daily-draw', icon: Moon },
 ]
 
@@ -131,9 +131,9 @@ function Navbar() {
                       style={{
                         position: 'absolute',
                         inset: 0,
-                        background: 'rgba(255, 255, 255, 0.05)',
+                        background: 'rgba(255, 255, 255, 0.1)',
                         borderRadius: 14,
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                         zIndex: -1,
                       }}
                     />
@@ -167,15 +167,34 @@ function Navbar() {
                 background: 'none', border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '8px 12px',
+                position: 'relative',
               }}
             >
-              <Book size={16} style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+              {bookOpen && (
+                <motion.div
+                  layoutId="active-pill"
+                  transition={{
+                    type: 'spring',
+                    stiffness: 400,
+                    damping: 30,
+                  }}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: 14,
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    zIndex: -1,
+                  }}
+                />
+              )}
+              <Book size={16} style={{ color: bookOpen ? 'white' : 'rgba(255, 255, 255, 0.5)' }} />
               <span style={{
                 fontFamily: 'var(--font-heading)',
                 fontSize: 10,
                 textTransform: 'uppercase',
                 letterSpacing: '0.1em',
-                color: 'rgba(255, 255, 255, 0.5)',
+                color: bookOpen ? 'white' : 'rgba(255, 255, 255, 0.5)',
                 fontWeight: 600,
               }} className="md:block hidden">
                 Answers

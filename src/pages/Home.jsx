@@ -6,7 +6,10 @@ import AuroraBackground from '../components/AuroraBackground'
 import MoonPhaseWidget from '../components/MoonPhaseWidget'
 import { useIsMobile } from '../utils/hooks'
 
-const iconMap = { Zap, Clock, Calendar, CalendarRange }
+const readerImage = "/assets/janvi.jpeg";
+const fallbackImage = "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=1000&auto=format&fit=crop";
+
+const iconMap = { Zap, Clock, Calendar, CalendarRange };
 
 // --- ENHANCED COMPONENTS ---
 
@@ -625,11 +628,52 @@ export default function Home() {
                   position: 'relative',
                 }}>
                   <motion.div
-                    animate={{ scale: [1, 1.3, 1], opacity: [0.05, 0.15, 0.05] }}
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                    style={{ 
+                      position: 'absolute', 
+                      width: '100%', 
+                      height: '100%', 
+                      zIndex: 1 
+                    }}
+                  >
+                    <img 
+                      src={readerImage} 
+                      alt="Janvi Gakher - Tarot Reader" 
+                      onError={(e) => {
+                        e.target.src = fallbackImage;
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        filter: 'contrast(1.1) brightness(0.9)',
+                      }}
+                    />
+                  </motion.div>
+                  
+                  {/* Subtle overlay to blend the image */}
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(to bottom, transparent 60%, rgba(10, 10, 15, 0.4))',
+                    zIndex: 2,
+                    pointerEvents: 'none',
+                  }} />
+                  
+                  <motion.div
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.2, 0.1] }}
                     transition={{ duration: 8, repeat: Infinity }}
-                    style={{ position: 'absolute', width: '100%', height: '100%', background: 'radial-gradient(circle, var(--aura-lavender) 0%, transparent 70%)', filter: 'blur(80px)' }}
+                    style={{ 
+                      position: 'absolute', 
+                      width: '100%', 
+                      height: '100%', 
+                      background: 'radial-gradient(circle, var(--aura-lavender) 0%, transparent 70%)', 
+                      filter: 'blur(80px)',
+                      zIndex: 3,
+                      pointerEvents: 'none',
+                    }}
                   />
-                  <span style={{ fontSize: isMobile ? 80 : 120, opacity: 0.1, color: 'white' }}>✦</span>
                 </div>
               </div>
             </motion.div>
@@ -815,10 +859,10 @@ export default function Home() {
         background: 'rgba(0,0,0,0.2)',
       }}>
         <p style={{ fontFamily: 'var(--font-heading)', fontSize: 20, letterSpacing: '0.3em', color: 'white', opacity: 0.9, marginBottom: 16, fontWeight: 600, textTransform: 'uppercase' }}>
-          The Fifth Suite
+          The Fifth Suit
         </p>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'rgba(255, 255, 255, 0.3)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 500 }}>
-          Where the cards meet your destiny
+          Where the intuition meet your destiny
         </p>
       </footer>
     </div>

@@ -21,14 +21,16 @@ export default function BookOfAnswers({ isOpen, onClose }) {
   const [answer, setAnswer] = useState(null);
   const isMobile = useIsMobile();
 
-  // Transition from opening cover to ready for interaction
+  // Reset phase when opening
   useEffect(() => {
     if (isOpen) {
       setPhase('opening');
-      const timer = setTimeout(() => setPhase('ready'), 1500);
-      return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  const handleProceed = () => {
+    setPhase('ready');
+  };
 
   const handleFindAnswer = () => {
     setPhase('flipping');
@@ -55,14 +57,14 @@ export default function BookOfAnswers({ isOpen, onClose }) {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: 'rgba(3, 3, 5, 0.98)',
+        background: isMobile ? '#0a0a0f' : 'rgba(3, 3, 5, 0.98)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         overflowY: 'auto',
         overflowX: 'hidden',
-        backdropFilter: isMobile ? 'blur(12px)' : 'blur(40px)',
-        padding: isMobile ? '80px 20px 40px' : '40px',
+        backdropFilter: isMobile ? 'none' : 'blur(40px)',
+        padding: isMobile ? '100px 20px 40px' : '40px',
       }}
     >
       {/* Background Ambience */}
@@ -99,21 +101,23 @@ export default function BookOfAnswers({ isOpen, onClose }) {
       </div>
 
       {/* THE BOOK ASSEMBLY */}
-      <div style={{ 
-        position: 'relative', 
-        width: 'min(100%, 880px)', 
-        height: 'auto',
-        zIndex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: 'auto',
-      }}>
+      <motion.div 
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        style={{ 
+          position: 'relative', 
+          width: 'min(100%, 880px)', 
+          height: 'auto',
+          zIndex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: 'auto',
+        }}
+      >
         
         {/* PHYSICAL SPREAD */}
-        <motion.div 
-          animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        <div 
           style={{
             display: 'flex', 
             flexDirection: isMobile ? 'column' : 'row',
@@ -140,19 +144,22 @@ export default function BookOfAnswers({ isOpen, onClose }) {
             background: isMobile 
               ? 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.06), rgba(0,0,0,0.12), rgba(0,0,0,0.06), transparent)'
               : 'linear-gradient(to right, transparent, rgba(0,0,0,0.06), rgba(0,0,0,0.12), rgba(0,0,0,0.06), transparent)',
-            zIndex: 10
+            zIndex: 10,
+            pointerEvents: 'none'
           }} />
 
           {/* LEFT PAGE - Content */}
           <div style={{ 
             flex: 1, 
-            padding: isMobile ? '48px 24px' : '60px', 
+            padding: isMobile ? '60px 24px' : '60px', 
             borderRight: isMobile ? 'none' : '1px solid rgba(0,0,0,0.05)', 
             borderBottom: isMobile ? '1px solid rgba(0,0,0,0.05)' : 'none',
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center', 
-            textAlign: 'center' 
+            textAlign: 'center',
+            position: 'relative',
+            zIndex: 20
           }}>
             <AnimatePresence mode="wait">
               {phase === 'ready' ? (
@@ -161,6 +168,7 @@ export default function BookOfAnswers({ isOpen, onClose }) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
+                  style={{ position: 'relative', zIndex: 30 }}
                 >
                   <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 6vw, 36px)', color: '#1a1a1f', marginBottom: 20, lineHeight: 1.1 }}>The Journey Begins</h3>
                   <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(15px, 4vw, 18px)', color: '#4a4a4f', lineHeight: 1.6, fontWeight: 500 }}>
@@ -170,13 +178,18 @@ export default function BookOfAnswers({ isOpen, onClose }) {
                   <motion.button
                     whileHover={{ scale: 1.05, background: '#000' }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={handleFindAnswer}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleFindAnswer();
+                    }}
                     style={{
                       marginTop: 32, padding: '18px 40px', borderRadius: 16,
                       background: '#1a1a1f', color: '#fcf8f0', border: 'none',
                       fontFamily: 'var(--font-heading)', fontSize: 12, textTransform: 'uppercase', cursor: 'pointer',
                       boxShadow: '0 10px 25px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: 12, margin: '32px auto 0',
-                      letterSpacing: '0.1em', fontWeight: 700
+                      letterSpacing: '0.1em', fontWeight: 700,
+                      position: 'relative', zIndex: 40
                     }}
                   >
                     <Wand2 size={16} /> Consult Oracle
@@ -270,36 +283,66 @@ export default function BookOfAnswers({ isOpen, onClose }) {
               </div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
 
-        {/* INITIAL COVER (Opening Animation) */}
+        {/* INITIAL COVER (Opening UI) */}
         <AnimatePresence>
           {phase === 'opening' && (
             <motion.div
               initial={{ rotateY: 0 }}
-              animate={{ rotateY: -170 }}
-              exit={{ opacity: 0 }}
+              exit={{ rotateY: -170, opacity: 0 }}
               transition={{ duration: 1.5, ease: [0.645, 0.045, 0.355, 1] }}
               style={{
-                position: 'absolute', inset: 0, width: '50%',
+                position: 'absolute', inset: 0, width: isMobile ? '100%' : '50%',
                 background: 'linear-gradient(135deg, #1e1b4b 0%, #030305 100%)',
-                borderRadius: '12px 0 0 12px',
-                transformOrigin: 'right center',
-                zIndex: 100,
+                borderRadius: isMobile ? '24px' : '12px 0 0 12px',
+                transformOrigin: isMobile ? 'center' : 'right center',
+                zIndex: 150,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 border: '1px solid rgba(255,255,255,0.1)',
                 boxShadow: 'inset 0 0 60px rgba(0,0,0,0.8)',
                 backfaceVisibility: 'hidden',
+                padding: '40px',
               }}
             >
-              <Sparkles size={isMobile ? 48 : 64} color="var(--aura-lavender)" style={{ marginBottom: 24, filter: 'drop-shadow(0 0 15px rgba(167,139,250,0.4))' }} />
-              <h2 style={{ fontFamily: 'var(--font-heading)', color: 'white', fontSize: isMobile ? 24 : 36, letterSpacing: '0.25em', textAlign: 'center', lineHeight: 1.3 }}>
+              <Sparkles size={isMobile ? 64 : 80} color="var(--aura-lavender)" style={{ marginBottom: 24, filter: 'drop-shadow(0 0 15px rgba(167,139,250,0.4))' }} />
+              <h2 style={{ fontFamily: 'var(--font-heading)', color: 'white', fontSize: isMobile ? 32 : 42, letterSpacing: '0.25em', textAlign: 'center', lineHeight: 1.3, marginBottom: 40 }}>
                 Book Of<br/>Answers
               </h2>
+              
+              <motion.button
+                whileHover={{ scale: 1.05, background: 'white', color: 'black' }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleProceed();
+                }}
+                style={{
+                  padding: '16px 40px',
+                  borderRadius: 50,
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--aura-lavender)',
+                  color: 'var(--aura-lavender)',
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: 12,
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(10px)',
+                  fontWeight: 700,
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 0 20px rgba(167, 139, 250, 0.2)',
+                  position: 'relative',
+                  zIndex: 160
+                }}
+              >
+                Open Grimoire
+              </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       {/* Cinematic Vignette */}
       {!isMobile && <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', boxShadow: 'inset 0 0 200px 100px rgba(0,0,0,0.9)', zIndex: 5 }} />}
