@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { getMoonPhase } from '../utils/moonPhase'
 import { ChevronRight } from 'lucide-react'
+import { useIsMobile } from '../utils/hooks'
 
 function MoonIcon({ phase, illumination, size = 80 }) {
   return (
@@ -12,7 +13,7 @@ function MoonIcon({ phase, illumination, size = 80 }) {
         position: 'absolute',
         inset: 0,
         borderRadius: '50%',
-        background: 'rgba(253, 111, 136, 0.3)',
+        background: 'rgba(167, 139, 250, 0.25)',
         filter: 'blur(16px)',
       }} />
 
@@ -21,10 +22,10 @@ function MoonIcon({ phase, illumination, size = 80 }) {
         position: 'absolute',
         inset: 0,
         borderRadius: '50%',
-        background: '#07060f',
-        border: '1px solid rgba(0,0,0,0.1)',
+        background: '#030305',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         overflow: 'hidden',
-        boxShadow: 'inset 0 0 15px rgba(0,0,0,0.8)',
+        boxShadow: 'inset 0 0 15px rgba(0,0,0,0.9)',
       }}>
         {/* Photographic Texture */}
         <div style={{
@@ -33,7 +34,8 @@ function MoonIcon({ phase, illumination, size = 80 }) {
           backgroundImage: 'url("https://images.unsplash.com/photo-1532693322450-2cb5c511067d?auto=format&fit=crop&q=80&w=400")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          opacity: 0.85,
+          opacity: 0.8,
+          filter: 'grayscale(0.5) brightness(0.9)',
         }} />
 
         {/* Shadow Overlay */}
@@ -72,15 +74,8 @@ const phaseDescriptions = {
 }
 
 function MoonPhaseWidget({ compact = false, className = '', style = {} }) {
-  const [isMobile, setIsMobile] = React.useState(false)
+  const isMobile = useIsMobile()
   const { phaseName, illumination, moonAge } = getMoonPhase()
-
-  React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
 
   return (
     <Link to="/moon-details" style={{ textDecoration: 'none', ...style }} className={className}>
@@ -93,15 +88,15 @@ function MoonPhaseWidget({ compact = false, className = '', style = {} }) {
           flexDirection: compact ? 'row' : 'column',
           alignItems: compact ? 'center' : 'center',
           gap: compact ? 12 : 0,
-          background: isMobile ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)',
-          backdropFilter: isMobile ? 'blur(8px)' : 'blur(16px)',
-          WebkitBackdropFilter: isMobile ? 'blur(8px)' : 'blur(16px)',
-          border: '1px solid rgba(253, 111, 136, 0.2)',
+          background: 'rgba(255, 255, 255, 0.5)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
           borderRadius: compact ? 22 : 28,
-          padding: compact ? '14px 14px 14px 12px' : '32px 24px',
+          padding: compact ? '14px 18px 14px 14px' : '32px 24px',
           width: compact ? 'auto' : 220,
           minWidth: compact ? 0 : 220,
-          boxShadow: '0 8px 32px rgba(253, 111, 136, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.5)',
           textAlign: 'center',
           cursor: 'pointer',
         }}
@@ -136,8 +131,8 @@ function MoonPhaseWidget({ compact = false, className = '', style = {} }) {
             <p style={{
               fontFamily: 'var(--font-body)',
               fontSize: 11,
-              color: '#D63D5A',
-              fontWeight: 600,
+              color: 'var(--aura-lavender)',
+              fontWeight: 700,
               marginBottom: 2,
             }}>
               {illumination}% illuminated
@@ -176,8 +171,8 @@ function MoonPhaseWidget({ compact = false, className = '', style = {} }) {
             <p style={{
               fontFamily: 'var(--font-body)',
               fontSize: 12,
-              color: '#D63D5A',
-              fontWeight: 600,
+              color: 'var(--aura-lavender)',
+              fontWeight: 700,
               marginBottom: 6,
             }}>
               {illumination}% Illuminated
@@ -197,7 +192,7 @@ function MoonPhaseWidget({ compact = false, className = '', style = {} }) {
             <div style={{
               width: 40,
               height: 1,
-              background: 'rgba(214, 61, 90, 0.3)',
+              background: 'rgba(167, 139, 250, 0.3)',
               margin: '0 auto 16px',
             }} />
 
@@ -219,7 +214,7 @@ function MoonPhaseWidget({ compact = false, className = '', style = {} }) {
                 marginTop: 16,
                 fontSize: 10,
                 fontFamily: 'var(--font-heading)',
-                color: '#D63D5A',
+                color: 'var(--aura-lavender)',
                 fontWeight: 700,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase'

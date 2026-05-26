@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, Loader } from 'lucide-react'
+import { CheckCircle, Loader, MessageCircle } from 'lucide-react'
 import AuroraBackground from '../components/AuroraBackground'
 import CelestialCalendar from '../components/CelestialCalendar'
 import { bookingCategories } from '../data/bookingTypes'
+import { CONTACT_CONFIG } from '../utils/contact'
+import { useIsMobile } from '../utils/hooks'
 
 const defaultCategory = {
   id: 'love',
@@ -36,14 +38,7 @@ export default function BookingForm() {
   const { categoryId } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const [isMobile, setIsMobile] = useState(false)
-
-  React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+  const isMobile = useIsMobile()
 
   const category = location.state?.category ||
     bookingCategories.find(c => c.id === categoryId) ||
@@ -69,19 +64,58 @@ export default function BookingForm() {
     const errs = validate(form)
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     
-    // Final Availability Check
     if (bookedDays.includes(form.date)) {
       setErrors({ date: 'This celestial day was just aligned by another soul.' })
       return
     }
     
     setSubmitting(true)
-    await new Promise(r => setTimeout(r, 2000))
-    
-    setBookedDays(prev => [...prev, form.date])
-    
-    setSubmitting(false)
-    setSuccess(true)
+
+    try {
+      // 1. Send to Web3Forms (Email)
+      const formData = new FormData()
+      formData.append("access_key", CONTACT_CONFIG.WEB3FORMS_ACCESS_KEY)
+      formData.append("name", form.name)
+      formData.append("email", form.email)
+      formData.append("phone", form.phone)
+      formData.append("reading_type", form.readingType)
+      formData.append("booking_category", category.title)
+      formData.append("date", form.date)
+      formData.append("subject", `New ${category.title} Booking from ${form.name}`)
+      formData.append("from_name", CONTACT_CONFIG.BRAND_NAME)
+
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData
+      })
+
+      if (response.ok) {
+        // 2. Prepare WhatsApp Message
+        const waMessage = `✨ *New Reading Request* ✨%0A%0A` +
+          `*Category:* ${category.title}%0A` +
+          `*Name:* ${form.name}%0A` +
+          `*Email:* ${form.email}%0A` +
+          `*Phone:* ${form.phone}%0A` +
+          `*Reading Type:* ${form.readingType}%0A` +
+          `*Date:* ${form.date}%0A%0A` +
+          `_Sent from ${CONTACT_CONFIG.BRAND_NAME}_`
+        
+        const waUrl = `https://wa.me/${CONTACT_CONFIG.WHATSAPP_NUMBER}?text=${waMessage}`
+        
+        // Open WhatsApp in new tab
+        window.open(waUrl, '_blank')
+        
+        setBookedDays(prev => [...prev, form.date])
+        setSuccess(true)
+      } else {
+        throw new Error("Failed to send email scroll")
+      }
+    } catch (error) {
+      console.error("Submission Error:", error)
+      setErrors({ form: "The cosmic winds are heavy. Please try again or contact Seraphina directly." })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const inputStyle = (field) => ({
@@ -117,14 +151,14 @@ export default function BookingForm() {
         }} 
       />
 
-      <div style={{ position: 'relative', zIndex: 1, paddingTop: 'clamp(80px, 10vh, 120px)', paddingBottom: 80, paddingLeft: 'min(24px, 5vw)', paddingRight: 'min(24px, 5vw)' }}>
+      <div style={{ position: 'relative', zIndex: 1, paddingTop: isMobile ? '140px' : 'clamp(80px, 10vh, 120px)', paddingBottom: 80, paddingLeft: 'min(24px, 5vw)', paddingRight: 'min(24px, 5vw)' }}>
         <div className="container-max" style={{ maxWidth: 720 }}>
           {/* Breadcrumb with category tint */}
           <div style={{ marginBottom: 40 }}>
-            <span style={{ fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(10, 10, 12, 0.5)' }}>
+            <span style={{ fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.5)' }}>
               <Link to="/booking" style={{ color: 'inherit', textDecoration: 'none' }}>The Sanctuary</Link>
               {' '} • {' '}
-              <span style={{ color: category.color, fontWeight: 700 }}>{category.title}</span>
+              <span style={{ color: category.auroraColor, fontWeight: 700 }}>{category.title}</span>
             </span>
           </div>
 
@@ -136,7 +170,7 @@ export default function BookingForm() {
                 background: 'rgba(255, 255, 255, 0.5)', 
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 border: '1px solid rgba(255, 255, 255, 0.6)',
-                color: category.color,
+                color: category.auroraColor,
                 boxShadow: `0 8px 20px ${category.glow}`
               }}>
                 ✦
@@ -145,7 +179,7 @@ export default function BookingForm() {
                 fontFamily: 'var(--font-display)',
                 fontWeight: 400,
                 fontSize: 'clamp(32px, 8vw, 64px)',
-                color: '#0a0a0c',
+                color: category.auroraColor,
                 lineHeight: 1,
               }}>
                 {category.title}
@@ -154,7 +188,7 @@ export default function BookingForm() {
             <p style={{ 
               fontFamily: 'var(--font-body)', 
               fontSize: 'clamp(16px, 4vw, 18px)', 
-              color: 'rgba(10, 10, 12, 0.7)', 
+              color: 'rgba(255, 255, 255, 0.7)', 
               fontWeight: 450,
               maxWidth: 500
             }}>
@@ -173,34 +207,49 @@ export default function BookingForm() {
                 style={{
                   padding: 'clamp(24px, 6vw, 56px) clamp(20px, 5vw, 48px)',
                   borderRadius: 32,
-                  background: category.gradient,
+                  background: `linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, ${category.auroraColor}05 100%)`,
+                  backdropFilter: isMobile ? 'blur(12px)' : 'blur(40px)',
+                  WebkitBackdropFilter: isMobile ? 'blur(12px)' : 'blur(40px)',
                   border: '1px solid rgba(255, 255, 255, 0.5)',
-                  boxShadow: `0 30px 70px rgba(0,0,0,0.08), inset 0 1px 2px rgba(255,255,255,0.8)`,
+                  boxShadow: `0 30px 70px rgba(0,0,0,0.08), inset 0 1px 2px rgba(255,255,255,0.8), inset 0 0 30px ${category.auroraColor}05`,
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
-                {/* Reading type selection */}
+                {/* Specular Tint Reflection */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0, left: 0, right: 0,
+                  height: '40%',
+                  background: `linear-gradient(135deg, ${category.auroraColor}15 0%, transparent 60%)`,
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                }} />
+
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  {/* Reading type selection */}
                 <div style={{ marginBottom: 48 }}>
-                  <label style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#0a0a0c', marginBottom: 20, fontWeight: 700 }}>
+                  <label style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: category.auroraColor, marginBottom: 20, fontWeight: 700 }}>
                     Select Your Intent
                   </label>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: window.innerWidth < 640 ? 'center' : 'flex-start' }}>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
                     {readingTypes.map(type => (
                       <button
                         key={type}
                         onClick={() => handleChange('readingType', type)}
                         style={{
-                          padding: window.innerWidth < 640 ? '10px 16px' : '12px 24px',
+                          padding: isMobile ? '12px 16px' : '12px 24px',
                           borderRadius: 14,
                           border: `1px solid ${form.readingType === type ? '#0a0a0c' : 'rgba(10, 10, 12, 0.1)'}`,
                           background: form.readingType === type ? '#0a0a0c' : 'rgba(255, 255, 255, 0.3)',
                           color: form.readingType === type ? 'white' : 'rgba(10, 10, 12, 0.6)',
                           fontFamily: 'var(--font-heading)',
-                          fontSize: window.innerWidth < 640 ? 10 : 12,
+                          fontSize: isMobile ? 11 : 12,
                           letterSpacing: '0.05em',
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
                           boxShadow: form.readingType === type ? `0 10px 20px rgba(0,0,0,0.1)` : 'none',
-                          flex: window.innerWidth < 640 ? '1 1 calc(50% - 10px)' : 'none',
+                          flex: isMobile ? '1 1 calc(50% - 10px)' : 'none',
                         }}
                       >
                         {type}
@@ -218,7 +267,7 @@ export default function BookingForm() {
                     { label: 'Electronic Scroll', field: 'email', type: 'email', placeholder: 'your@essence.com' },
                   ].map(({ label, field, type, placeholder }) => (
                     <div key={field}>
-                      <label style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#0a0a0c', marginBottom: 10, fontWeight: 700 }}>
+                      <label style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em', color: category.auroraColor, marginBottom: 10, fontWeight: 700 }}>
                         {label}
                       </label>
                       <input
@@ -244,7 +293,7 @@ export default function BookingForm() {
 
                   {/* Date Selection - Celestial Calendar */}
                   <div style={{ marginTop: 16 }}>
-                    <label style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#0a0a0c', marginBottom: 20, fontWeight: 700 }}>
+                    <label style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em', color: category.auroraColor, marginBottom: 20, fontWeight: 700 }}>
                       Consult the Alignment
                     </label>
                     <CelestialCalendar 
@@ -297,6 +346,16 @@ export default function BookingForm() {
                     </>
                   ) : `Request ${category.title} Reading`}
                 </motion.button>
+                {errors.form && (
+                  <motion.p 
+                    initial={{ opacity: 0, y: 10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    style={{ color: '#ff4d4d', fontSize: 13, textAlign: 'center', marginTop: 20, fontFamily: 'var(--font-body)' }}
+                  >
+                    {errors.form}
+                  </motion.p>
+                )}
+                </div>
               </motion.div>
             ) : (
               <motion.div
@@ -305,15 +364,30 @@ export default function BookingForm() {
                 animate={{ opacity: 1, y: 0 }}
                 className="glass"
                 style={{
-                  padding: 80,
+                  padding: 'clamp(40px, 8vw, 80px)',
                   textAlign: 'center',
                   borderRadius: 40,
-                  background: category.gradient,
-                  border: '1px solid rgba(255, 255, 255, 0.6)',
-                  boxShadow: `0 40px 100px rgba(0,0,0,0.1), 0 0 40px ${category.glow}`,
+                  background: `linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, ${category.auroraColor}10 100%)`,
+                  backdropFilter: isMobile ? 'blur(12px)' : 'blur(40px)',
+                  WebkitBackdropFilter: isMobile ? 'blur(12px)' : 'blur(40px)',
+                  border: '1px solid rgba(255, 255, 255, 0.5)',
+                  boxShadow: `0 30px 70px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.8)`,
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
-                <motion.div
+                {/* Specular Tint Reflection */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0, left: 0, right: 0,
+                  height: '100%',
+                  background: `radial-gradient(circle at top left, ${category.auroraColor}15 0%, transparent 70%)`,
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                }} />
+
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <motion.div
                   initial={{ scale: 0, rotate: -45 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.2 }}
@@ -330,31 +404,68 @@ export default function BookingForm() {
                     <CheckCircle size={56} style={{ color: category.color }} />
                   </div>
                 </motion.div>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 42, color: '#0a0a0c', marginBottom: 20 }}>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(32px, 5vw, 42px)', color: category.auroraColor, marginBottom: 20 }}>
                   Destiny Shared
                 </h2>
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, color: 'rgba(10, 10, 12, 0.7)', marginBottom: 48, lineHeight: 1.8, fontWeight: 450, maxWidth: 500, margin: '0 auto 48px' }}>
-                  Seraphina has received your intent for a <strong>{category.title}</strong> session. A confirmation scroll will reach your inbox shortly.
+                  Seraphina has received your intent for a <strong>{category.title}</strong> session. A confirmation scroll will reach your inbox, and your WhatsApp portal should have opened.
                 </p>
-                <motion.button
-                  whileHover={{ y: -4, background: '#1a1a1a', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}
-                  onClick={() => navigate('/')}
-                  style={{
-                    padding: '20px 48px',
-                    background: '#0a0a0c',
-                    border: 'none',
-                    borderRadius: 16,
-                    color: 'white',
-                    fontFamily: 'var(--font-heading)',
-                    fontSize: 14,
-                    letterSpacing: '0.15em',
-                    textTransform: 'uppercase',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  Return to Sanctuary
-                </motion.button>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+                  <motion.button
+                    whileHover={{ scale: 1.05, background: '#25D366', color: 'white' }}
+                    onClick={() => {
+                      const waMessage = `✨ *New Reading Request* ✨%0A%0A` +
+                        `*Category:* ${category.title}%0A` +
+                        `*Name:* ${form.name}%0A` +
+                        `*Email:* ${form.email}%0A` +
+                        `*Phone:* ${form.phone}%0A` +
+                        `*Reading Type:* ${form.readingType}%0A` +
+                        `*Date:* ${form.date}%0A%0A` +
+                        `_Sent from ${CONTACT_CONFIG.BRAND_NAME}_`
+                      window.open(`https://wa.me/${CONTACT_CONFIG.WHATSAPP_NUMBER}?text=${waMessage}`, '_blank')
+                    }}
+                    style={{
+                      padding: '16px 32px',
+                      background: 'rgba(37, 211, 102, 0.1)',
+                      border: '1px solid #25D366',
+                      borderRadius: 14,
+                      color: '#25D366',
+                      fontFamily: 'var(--font-heading)',
+                      fontSize: 13,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    <MessageCircle size={18} />
+                    Open WhatsApp Manually
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ opacity: 0.8 }}
+                    onClick={() => navigate('/')}
+                    style={{
+                      marginTop: 24,
+                      background: 'none',
+                      border: 'none',
+                      color: 'rgba(10, 10, 12, 0.4)',
+                      fontFamily: 'var(--font-heading)',
+                      fontSize: 11,
+                      letterSpacing: '0.2em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    Return to Sanctuary
+                  </motion.button>
+                </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

@@ -1,39 +1,40 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
+import { useIsMobile } from '../utils/hooks';
 
-// Reducing count and complexity of orbs for performance
+// Optimized dark theme orbs with deeper, more mystical colors
 const orbs = [
-  { id: 10, size: '70vw', top: '22%', left: '50%', color: '#FD6F88', edge: '#E84B6A', duration: 15, opacity: 0.6 }, 
-  { id: 1, size: '80vw', top: '30%', left: '45%', color: '#D63D5A', edge: '#B4253D', duration: 20, opacity: 0.4 }, 
-  { id: 2, size: '45vw', top: '15%', left: '15%', color: '#C5304B', edge: '#A31C32', duration: 25, opacity: 0.3 },
-  { id: 6, size: '70vw', top: '75%', left: '20%', color: '#D63D5A', edge: '#B4253D', duration: 22, opacity: 0.4 },
-  { id: 7, size: '60vw', top: '85%', right: '15%', color: '#C5304B', edge: '#A31C32', duration: 28, opacity: 0.3 },
+  { id: 10, size: '70vw', top: '10%', left: '80%', color: '#1e1b4b', edge: '#312e81', duration: 25, opacity: 0.4 }, 
+  { id: 1, size: '85vw', top: '40%', left: '20%', color: '#2e1065', edge: '#4c1d95', duration: 30, opacity: 0.3 }, 
+  { id: 2, size: '60vw', top: '80%', left: '70%', color: '#4c0519', edge: '#881337', duration: 35, opacity: 0.2 },
+  { id: 6, size: '75vw', top: '20%', left: '10%', color: '#0f172a', edge: '#1e293b', duration: 28, opacity: 0.4 },
+  { id: 7, size: '65vw', top: '90%', right: '10%', color: '#111827', edge: '#1f2937', duration: 32, opacity: 0.3 },
 ];
 
-const Orb = memo(({ orb }) => (
+const Orb = memo(({ orb, isMobile }) => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ 
-      opacity: [orb.opacity * 0.8, orb.opacity, orb.opacity * 0.8],
-      x: ['-2%', '2%', '-2%'],
-      y: ['-2%', '2%', '-2%'],
+      opacity: [orb.opacity * 0.7, orb.opacity, orb.opacity * 0.7],
+      x: isMobile ? ['-1%', '1%', '-1%'] : ['-3%', '3%', '-3%'],
+      y: isMobile ? ['-1%', '1%', '-1%'] : ['-3%', '3%', '-3%'],
     }}
     transition={{
-      duration: orb.duration,
+      duration: isMobile ? orb.duration * 1.5 : orb.duration,
       repeat: Infinity,
-      ease: "linear",
+      ease: "easeInOut",
     }}
     style={{
       position: 'absolute',
       top: orb.top,
       left: orb.left,
-      width: orb.size,
-      height: orb.size,
-      maxWidth: '600px',
-      maxHeight: '600px',
+      width: isMobile ? '100vw' : orb.size,
+      height: isMobile ? '100vw' : orb.size,
+      maxWidth: isMobile ? '400px' : '800px',
+      maxHeight: isMobile ? '400px' : '800px',
       borderRadius: '50%',
       background: `radial-gradient(circle, ${orb.color} 0%, ${orb.edge} 40%, transparent 80%)`,
-      filter: 'blur(60px)', // Further reduced blur
+      filter: isMobile ? 'blur(40px)' : 'blur(80px)',
       transform: 'translate(-50%, -50%)',
       willChange: 'transform, opacity',
       backfaceVisibility: 'hidden',
@@ -42,51 +43,44 @@ const Orb = memo(({ orb }) => (
 ));
 
 function AuroraBackground() {
-  const [isMobile, setIsMobile] = React.useState(false);
+  const isMobile = useIsMobile();
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const visibleOrbs = isMobile ? orbs.slice(0, 3) : orbs;
+  const visibleOrbs = isMobile ? orbs.slice(0, 2) : orbs;
 
   return (
     <div
       style={{
-        position: 'fixed', // Use fixed instead of absolute for background to avoid layout shifts on scroll
+        position: 'fixed',
         inset: 0,
         zIndex: 0,
         overflow: 'hidden',
         pointerEvents: 'none',
-        background: '#FCEAF0', 
+        background: '#030305', // Deep Obsidian Base
         minHeight: '100%',
-        contain: 'strict', // Stronger layout optimization
+        contain: 'strict',
       }}
       aria-hidden="true"
     >
       {visibleOrbs.map((orb) => (
-        <Orb key={orb.id} orb={orb} />
+        <Orb key={orb.id} orb={orb} isMobile={isMobile} />
       ))}
 
-      {/* Static gradient overlay is much cheaper than backdrop-filter */}
+      {/* Dark vignette overlay */}
       <div 
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'radial-gradient(circle at center, transparent 30%, rgba(252, 234, 240, 0.4) 100%)',
+          background: 'radial-gradient(circle at center, transparent 20%, rgba(3, 3, 5, 0.7) 100%)',
         }} 
       />
 
-      {/* Optimized static-like noise (lower frequency) */}
+      {/* Subtle Grain Overlay */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        opacity: 0.03,
+        opacity: 0.04,
         mixBlendMode: 'overlay',
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
       }} />
     </div>
   );

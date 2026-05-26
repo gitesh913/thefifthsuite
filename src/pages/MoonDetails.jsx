@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { ChevronLeft, Info, Calendar, Sparkles, Zap, Shield, Heart, Compass } from 'lucide-react'
 import AuroraBackground from '../components/AuroraBackground'
 import { getMoonPhase } from '../utils/moonPhase'
+import { useIsMobile } from '../utils/hooks'
 
 const lunarRituals = {
   'New Moon': [
@@ -63,14 +64,7 @@ const phaseDescriptions = {
 }
 
 function StarField() {
-  const [isMobile, setIsMobile] = React.useState(false)
-
-  React.useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+  const isMobile = useIsMobile()
 
   const stars = useMemo(() => {
     const count = isMobile ? 25 : 60
@@ -97,7 +91,7 @@ function StarField() {
             left: star.left,
             width: star.size,
             height: star.size,
-            background: 'var(--aura-angel-pink)',
+            background: 'var(--aura-lavender)',
             borderRadius: '50%',
             willChange: 'opacity',
           }}
@@ -117,7 +111,7 @@ function MoonSmallIcon({ phase, illumination }) {
       width: 40,
       height: 40,
       borderRadius: '50%',
-      background: '#07060f',
+      background: '#030305',
       position: 'relative',
       overflow: 'hidden',
       border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -125,7 +119,7 @@ function MoonSmallIcon({ phase, illumination }) {
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: '#FD6F88',
+        background: 'var(--aura-lavender)',
         clipPath: isNew ? 'circle(0%)' : isFull ? 'circle(100%)' : isWaxing ? `inset(0 0 0 ${100 - illumination}%)` : `inset(0 ${100 - illumination}% 0 0)`,
         boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)',
       }} />
@@ -154,7 +148,7 @@ function RealisticMoon({ phase, illumination, size = 220 }) {
           position: 'absolute',
           inset: -size * 0.2,
           borderRadius: '50%',
-          background: 'rgba(253, 111, 136, 0.3)',
+          background: 'rgba(167, 139, 250, 0.3)',
           filter: 'blur(40px)',
           zIndex: 0,
         }}
@@ -163,9 +157,9 @@ function RealisticMoon({ phase, illumination, size = 220 }) {
         position: 'absolute',
         inset: 0,
         borderRadius: '50%',
-        background: '#07060f',
+        background: '#030305',
         overflow: 'hidden',
-        boxShadow: '0 0 50px rgba(253, 111, 136, 0.1), inset 0 0 40px rgba(0,0,0,0.9)',
+        boxShadow: '0 0 50px rgba(167, 139, 250, 0.1), inset 0 0 40px rgba(0,0,0,0.9)',
         zIndex: 1,
       }}>
         <div style={{
@@ -175,7 +169,7 @@ function RealisticMoon({ phase, illumination, size = 220 }) {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           opacity: 0.9,
-          filter: 'brightness(0.9) contrast(1.1)',
+          filter: 'grayscale(0.5) brightness(0.9) contrast(1.1)',
         }} />
         <div style={{
           position: 'absolute',
@@ -191,6 +185,7 @@ function RealisticMoon({ phase, illumination, size = 220 }) {
 }
 
 export default function MoonDetails() {
+  const isMobile = useIsMobile()
   const today = new Date()
   const weekData = Array.from({ length: 7 }).map((_, i) => {
     const date = new Date(today)
@@ -206,11 +201,11 @@ export default function MoonDetails() {
   const crystal = crystalAffinities[currentPhase.phaseName]
 
   return (
-    <div className="page-wrapper" style={{ position: 'relative', minHeight: '100vh', paddingBottom: 120, background: '#FCEAF0' }}>
+    <div className="page-wrapper" style={{ position: 'relative', minHeight: '100vh', paddingBottom: 120, background: 'var(--bg-void)' }}>
       <AuroraBackground />
       <StarField />
       
-      <div className="container-max" style={{ position: 'relative', zIndex: 1, paddingTop: 80 }}>
+      <div className="container-max" style={{ position: 'relative', zIndex: 1, paddingTop: isMobile ? 140 : 80 }}>
         <Link to="/" style={{ textDecoration: 'none' }}>
           <motion.div
             whileHover={{ x: -4 }}
@@ -218,16 +213,17 @@ export default function MoonDetails() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              color: '#D63D5A',
+              color: 'var(--aura-lavender)',
               fontFamily: 'var(--font-heading)',
               fontSize: 12,
               letterSpacing: '0.15em',
               textTransform: 'uppercase',
               marginBottom: 40,
               padding: '8px 16px',
-              background: 'rgba(255,255,255,0.45)',
+              background: 'rgba(255,255,255,0.05)',
               borderRadius: 50,
-              border: '1px solid rgba(253, 111, 136, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
             }}
           >
             <ChevronLeft size={16} />
@@ -262,7 +258,7 @@ export default function MoonDetails() {
                 width: 320,
                 height: 320,
                 borderRadius: '50%',
-                border: '1px dashed rgba(214, 61, 90, 0.3)',
+                border: '1px dashed rgba(167, 139, 250, 0.2)',
               }}
             />
 
@@ -275,7 +271,7 @@ export default function MoonDetails() {
                 fontFamily: 'var(--font-display)',
                 fontSize: 'clamp(48px, 6vw, 72px)',
                 fontWeight: 400,
-                color: '#0a0a0c',
+                color: 'white',
                 marginBottom: 12,
                 letterSpacing: '0.05em',
               }}
@@ -286,16 +282,17 @@ export default function MoonDetails() {
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              background: 'rgba(255, 255, 255, 0.45)',
+              background: 'rgba(255, 255, 255, 0.05)',
               padding: '8px 24px',
               borderRadius: 50,
-              border: '1px solid rgba(253, 111, 136, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
             }}>
-              <span style={{ fontSize: 11, color: '#D63D5A', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>
+              <span style={{ fontSize: 11, color: 'var(--aura-lavender)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700 }}>
                 Age: {currentPhase.moonAge} Days
               </span>
-              <div style={{ width: 1, height: 10, background: 'rgba(214, 61, 90, 0.3)' }} />
-              <span style={{ fontSize: 11, color: '#D63D5A', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>
+              <div style={{ width: 1, height: 10, background: 'rgba(255, 255, 255, 0.1)' }} />
+              <span style={{ fontSize: 11, color: 'var(--aura-lavender)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700 }}>
                 {currentPhase.illumination}% Lit
               </span>
             </div>
@@ -306,11 +303,11 @@ export default function MoonDetails() {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               className="glass"
-              style={{ padding: 40, background: 'rgba(255, 255, 255, 0.45)' }}
+              style={{ padding: 40, background: 'rgba(255, 255, 255, 0.03)' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <Info size={18} style={{ color: '#D63D5A' }} />
-                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 16, color: '#0a0a0c', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700 }}>
+                <Info size={18} style={{ color: 'var(--aura-lavender)' }} />
+                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 16, color: 'white', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700 }}>
                   The Cosmic Current
                 </h2>
               </div>
@@ -318,9 +315,9 @@ export default function MoonDetails() {
                 fontFamily: 'var(--font-body)',
                 fontSize: 18,
                 lineHeight: 1.8,
-                color: '#0a0a0c',
+                color: 'rgba(255, 255, 255, 0.8)',
                 fontStyle: 'italic',
-                fontWeight: 450,
+                fontWeight: 400,
                 marginBottom: 0,
               }}>
                 "{phaseDescriptions[currentPhase.phaseName]}"
@@ -334,13 +331,13 @@ export default function MoonDetails() {
               className="glass"
               style={{ 
                 padding: 40, 
-                background: 'rgba(255, 255, 255, 0.5)',
-                border: '1px solid rgba(253, 111, 136, 0.3)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(167, 139, 250, 0.3)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <Sparkles size={18} style={{ color: '#D63D5A' }} />
-                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 14, color: '#D63D5A', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700 }}>
+                <Sparkles size={18} style={{ color: 'var(--aura-lavender)' }} />
+                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 14, color: 'var(--aura-lavender)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700 }}>
                   Daily Affirmation
                 </h2>
               </div>
@@ -348,7 +345,7 @@ export default function MoonDetails() {
                 fontFamily: 'var(--font-display)',
                 fontSize: 26,
                 lineHeight: 1.4,
-                color: '#0a0a0c',
+                color: 'white',
                 fontWeight: 400,
               }}>
                 "I am aligned with the divine rhythm of the universe. What I seek is already seeking me."
@@ -368,11 +365,11 @@ export default function MoonDetails() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="glass"
-            style={{ padding: 40, background: 'rgba(255, 255, 255, 0.4)' }}
+            style={{ padding: 40, background: 'rgba(255, 255, 255, 0.02)' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
-              <Sparkles size={20} style={{ color: '#D63D5A' }} />
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 18, color: '#0a0a0c', letterSpacing: '0.1em', fontWeight: 700 }}>
+              <Sparkles size={20} style={{ color: 'var(--aura-lavender)' }} />
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 18, color: 'white', letterSpacing: '0.1em', fontWeight: 700 }}>
                 Lunar Rituals
               </h2>
             </div>
@@ -383,15 +380,15 @@ export default function MoonDetails() {
                   <div key={idx} style={{ display: 'flex', gap: 20 }}>
                     <div style={{ 
                       flexShrink: 0, width: 44, height: 44, 
-                      borderRadius: 12, background: 'rgba(253, 111, 136, 0.1)',
+                      borderRadius: 12, background: 'rgba(167, 139, 250, 0.1)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: '#D63D5A'
+                      color: 'var(--aura-lavender)'
                     }}>
                       <RitualIcon size={20} />
                     </div>
                     <div>
-                      <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: 14, color: '#0a0a0c', marginBottom: 6, fontWeight: 700 }}>{ritual.title}</h4>
-                      <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'rgba(10, 10, 12, 0.7)', lineHeight: 1.6, fontWeight: 450 }}>{ritual.text}</p>
+                      <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: 14, color: 'white', marginBottom: 6, fontWeight: 700 }}>{ritual.title}</h4>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.6, fontWeight: 400 }}>{ritual.text}</p>
                     </div>
                   </div>
                 )
@@ -407,7 +404,7 @@ export default function MoonDetails() {
             className="glass"
             style={{ 
               padding: 40, 
-              background: 'rgba(255, 255, 255, 0.4)',
+              background: 'rgba(255, 255, 255, 0.02)',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
@@ -418,20 +415,20 @@ export default function MoonDetails() {
             <div style={{ 
               width: 80, height: 80, 
               borderRadius: '50%', 
-              background: 'rgba(253, 111, 136, 0.1)',
+              background: 'rgba(167, 139, 250, 0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               marginBottom: 24,
-              border: '1px solid rgba(253, 111, 136, 0.2)',
+              border: '1px solid rgba(167, 139, 250, 0.2)',
             }}>
-              <Zap size={32} style={{ color: '#D63D5A' }} />
+              <Zap size={32} style={{ color: 'var(--aura-lavender)' }} />
             </div>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 14, color: 'rgba(10, 10, 12, 0.5)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 12, fontWeight: 600 }}>
+            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 14, color: 'rgba(255, 255, 255, 0.4)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 12, fontWeight: 600 }}>
               Crystal Affinity
             </h2>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 36, color: '#0a0a0c', marginBottom: 8, fontWeight: 400 }}>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 36, color: 'white', marginBottom: 8, fontWeight: 400 }}>
               {crystal?.name}
             </h3>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: '#D63D5A', fontStyle: 'italic', fontWeight: 500 }}>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--aura-lavender)', fontStyle: 'italic', fontWeight: 600 }}>
               {crystal?.benefit}
             </p>
           </motion.section>
@@ -444,12 +441,12 @@ export default function MoonDetails() {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Calendar size={20} style={{ color: '#D63D5A' }} />
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 20, color: '#0a0a0c', letterSpacing: '0.1em', fontWeight: 700 }}>
+              <Calendar size={20} style={{ color: 'var(--aura-lavender)' }} />
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 20, color: 'white', letterSpacing: '0.1em', fontWeight: 700 }}>
                 7-Day Lunar Journey
               </h2>
             </div>
-            <div style={{ width: '40%', height: 1, background: 'linear-gradient(90deg, rgba(214, 61, 90, 0.3), transparent)' }} />
+            <div style={{ width: '40%', height: 1, background: 'linear-gradient(90deg, rgba(167, 139, 250, 0.3), transparent)' }} />
           </div>
 
           <div style={{
@@ -466,9 +463,9 @@ export default function MoonDetails() {
                 viewport={{ once: true }}
                 whileHover={{ 
                   y: -10, 
-                  background: 'rgba(255, 255, 255, 0.65)', 
-                  borderColor: 'rgba(253, 111, 136, 0.5)',
-                  boxShadow: '0 20px 40px rgba(253, 111, 136, 0.15)'
+                  background: 'rgba(255, 255, 255, 0.08)', 
+                  borderColor: 'rgba(167, 139, 250, 0.5)',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
                 }}
                 className="glass"
                 style={{
@@ -478,8 +475,8 @@ export default function MoonDetails() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   gap: 16,
-                  background: 'rgba(255, 255, 255, 0.35)',
-                  borderColor: i === 0 ? 'rgba(253, 111, 136, 0.6)' : 'rgba(253, 111, 136, 0.15)',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  borderColor: i === 0 ? 'rgba(167, 139, 250, 0.6)' : 'rgba(255, 255, 255, 0.05)',
                   cursor: 'default',
                   position: 'relative',
                   overflow: 'hidden',
@@ -488,14 +485,14 @@ export default function MoonDetails() {
                 {i === 0 && (
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-                    background: 'linear-gradient(90deg, #FD6F88, #D63D5A)'
+                    background: 'var(--aura-lavender)'
                   }} />
                 )}
                 
                 <p style={{
                   fontFamily: 'var(--font-heading)',
                   fontSize: 10,
-                  color: i === 0 ? '#D63D5A' : 'rgba(10, 10, 12, 0.5)',
+                  color: i === 0 ? 'var(--aura-lavender)' : 'rgba(255, 255, 255, 0.4)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.1em',
                   fontWeight: 700,
@@ -506,10 +503,10 @@ export default function MoonDetails() {
                 <MoonSmallIcon phase={day.phaseName} illumination={day.illumination} />
                 
                 <div>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#0a0a0c', marginBottom: 4, fontWeight: 600 }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'white', marginBottom: 4, fontWeight: 600 }}>
                     {day.phaseName}
                   </p>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#D63D5A', fontWeight: 700 }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--aura-lavender)', fontWeight: 700 }}>
                     {day.illumination}% lit
                   </p>
                 </div>

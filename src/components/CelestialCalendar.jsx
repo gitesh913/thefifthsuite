@@ -121,20 +121,22 @@ export default function CelestialCalendar({ selectedDate, onDateChange, themeCol
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleDateClick(d.date)}
                 style={{
+                  width: '100%',
                   aspectRatio: '1/1',
                   borderRadius: 12,
                   border: active ? `2px solid ${themeColor}` : 'none',
                   background: active ? themeColor : today ? 'rgba(255,255,255,0.6)' : 'transparent',
                   color: active ? 'white' : d.current ? '#0a0a0c' : 'rgba(10, 10, 12, 0.2)',
                   fontFamily: 'var(--font-body)',
-                  fontSize: 'clamp(12px, 3.5vw, 14px)',
-                  fontWeight: active || today ? 600 : 400,
+                  fontSize: 'clamp(11px, 3.5vw, 14px)',
+                  fontWeight: active || today ? 700 : 400,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   position: 'relative',
                   transition: 'all 0.2s ease',
+                  padding: 0,
                 }}
               >
                 {d.day}

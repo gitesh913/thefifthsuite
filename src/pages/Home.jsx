@@ -1,46 +1,58 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react'
+import React, { useMemo, useRef, useState, useEffect, memo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion'
 import { Zap, Clock, Calendar, CalendarRange, Quote, Sparkles, Star, Users, Globe } from 'lucide-react'
 import AuroraBackground from '../components/AuroraBackground'
 import MoonPhaseWidget from '../components/MoonPhaseWidget'
+import { useIsMobile } from '../utils/hooks'
 
 const iconMap = { Zap, Clock, Calendar, CalendarRange }
 
 // --- ENHANCED COMPONENTS ---
 
-function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#fff', bgGradient = 'rgba(255, 255, 255, 0.6)' }) {
-  const [isMobile, setIsMobile] = useState(false)
+function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#fff', bgGradient = 'rgba(255, 255, 255, 0.03)' }) {
+  const isMobile = useIsMobile()
   const x = useMotionValue(0)
   const y = useMotionValue(0)
+  
+  // Reflection tracking
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+
   const mouseXSpring = useSpring(x)
   const mouseYSpring = useSpring(y)
   const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ['10deg', '-10deg'])
   const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ['-10deg', '10deg'])
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+  // Dynamic light reflection position
+  const reflectX = useSpring(mouseX)
+  const reflectY = useSpring(mouseY)
 
   const handleMouseMove = (e) => {
     if (isMobile) return
     const rect = e.currentTarget.getBoundingClientRect()
     const width = rect.width
     const height = rect.height
-    const mouseX = e.clientX - rect.left
-    const mouseY = e.clientY - rect.top
-    const xPct = mouseX / width - 0.5
-    const yPct = mouseY / height - 0.5
+    
+    const posX = e.clientX - rect.left
+    const posY = e.clientY - rect.top
+    
+    const xPct = posX / width - 0.5
+    const yPct = posY / height - 0.5
+    
     x.set(xPct)
     y.set(yPct)
+    
+    // Set reflection coords
+    mouseX.set((posX / width) * 100)
+    mouseY.set((posY / height) * 100)
   }
 
   const handleMouseLeave = () => {
     x.set(0)
     y.set(0)
+    mouseX.set(0)
+    mouseY.set(0)
   }
 
   return (
@@ -54,64 +66,79 @@ function SpectralTiltCard({ children, className = '', style = {}, tintColor = '#
         position: 'relative',
         ...style,
       }}
-      whileHover={isMobile ? {} : { 
+      whileHover={isMobile ? { scale: 1.01 } : { 
         scale: 1.02,
         y: -8,
-        borderColor: 'rgba(255,255,255,0.8)',
-        boxShadow: `0 20px 40px rgba(0,0,0,0.08), 0 0 15px ${tintColor}44`,
+        borderColor: 'rgba(255,255,255,0.2)',
+        boxShadow: `0 40px 80px rgba(0,0,0,0.5), 0 0 30px ${tintColor}15`,
       }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
+      whileTap={isMobile ? { scale: 0.98 } : {}}
+      transition={{ duration: 0.4, ease: "easeOut" }}
       className={`glass ${className}`}
     >
-      {/* Intense Reflection Overlay */}
+      {/* Dynamic Light Reflection Layer */}
       {!isMobile && (
         <motion.div
           style={{
             position: 'absolute',
             inset: 0,
-            background: `linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 40%, transparent 60%, ${tintColor}22 100%)`,
-            zIndex: 0,
+            zIndex: 1,
             borderRadius: 'inherit',
+            background: useTransform(
+              [reflectX, reflectY],
+              ([cx, cy]) => `radial-gradient(circle at ${cx}% ${cy}%, rgba(255,255,255,0.12) 0%, transparent 60%)`
+            ),
+            pointerEvents: 'none',
           }}
         />
       )}
+
+      {/* Sweep Shine Effect on Hover */}
+      {!isMobile && (
+        <motion.div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 50%, transparent 55%)',
+            zIndex: 2,
+            opacity: 0,
+            borderRadius: 'inherit',
+            pointerEvents: 'none',
+          }}
+          whileHover={{ opacity: 1, left: ['-100%', '100%'] }}
+          transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity, repeatDelay: 3 }}
+        />
+      )}
       
-      {/* Background glass saturation - Luxury Aesthetic */}
+      {/* Background glass saturation */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: isMobile ? 'rgba(255, 255, 255, 0.85)' : bgGradient,
-        backdropFilter: isMobile ? 'blur(8px)' : 'blur(20px)',
-        WebkitBackdropFilter: isMobile ? 'blur(8px)' : 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.4)',
-        boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.6), 0 10px 30px rgba(0,0,0,0.05)',
+        background: bgGradient,
+        backdropFilter: isMobile ? 'blur(16px)' : 'blur(30px)',
+        WebkitBackdropFilter: isMobile ? 'blur(16px)' : 'blur(30px)',
+        border: isMobile ? '1px solid rgba(255, 255, 255, 0.8)' : '1px solid rgba(255, 255, 255, 0.08)',
         zIndex: -1,
+        borderRadius: 'inherit',
+      }} />
+
+      {/* Persistent Specular Tint */}
+      <div style={{
+        position: 'absolute',
+        top: 0, left: 0, right: 0,
+        height: '40%',
+        background: `linear-gradient(135deg, ${tintColor}15 0%, transparent 60%)`,
+        pointerEvents: 'none',
+        zIndex: 0,
         borderRadius: 'inherit',
       }} />
       
       {/* Content */}
-      <div style={{ transform: isMobile ? 'none' : 'translateZ(30px)', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 2 }}>
+      <div style={{ transform: isMobile ? 'none' : 'translateZ(40px)', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 3 }}>
         {children}
       </div>
-
-      {/* Shine effect */}
-      {!isMobile && (
-        <motion.div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.6) 45%, rgba(255,255,255,0.6) 50%, transparent 55%)',
-            zIndex: 1,
-            opacity: 0,
-            borderRadius: 'inherit',
-          }}
-          whileHover={{ opacity: 0.4, left: ['-100%', '100%'] }}
-          transition={{ duration: 1, ease: "easeInOut" }}
-        />
-      )}
     </motion.div>
   )
-}
 }
 
 function ShootingStar() {
@@ -154,18 +181,12 @@ function ShootingStar() {
   )
 }
 
-function SolarSystemBackground() {
-  const [isMobile, setIsMobile] = useState(false)
+const SolarSystemBackground = memo(() => {
+  const isMobile = useIsMobile()
   const { scrollY } = useScroll()
-  const yParallax = useTransform(scrollY, [0, 2000], [0, 400])
+  const yParallaxRaw = useTransform(scrollY, [0, 2000], [0, 400])
+  const yParallax = useSpring(yParallaxRaw, { stiffness: 100, damping: 30 })
   const scaleParallax = useTransform(scrollY, [0, 1000], [1, 1.1])
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
 
   if (isMobile) return null
 
@@ -181,39 +202,38 @@ function SolarSystemBackground() {
   ]
 
   return (
-    <motion.div style={{ 
-      position: 'absolute', 
-      inset: 0, 
-      zIndex: 0, 
-      overflow: 'hidden', 
-      pointerEvents: 'none',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      y: yParallax,
-      scale: scaleParallax,
-      opacity: 0.6,
-    }}>
-      <div style={{
-        position: 'relative',
-        width: 70, height: 70,
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, #FFFDE1 0%, #FFD700 50%, #FF8C00 100%)',
-        boxShadow: '0 0 120px 30px rgba(255, 140, 0, 0.2), 0 0 60px rgba(255, 215, 0, 0.3)',
+    <div style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none', contain: 'strict' }}>
+      <motion.div style={{ 
+        position: 'absolute', 
+        inset: 0, 
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        y: yParallax,
+        scale: scaleParallax,
+        opacity: 0.6,
+        willChange: 'transform',
       }}>
-        <motion.div
-          animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          style={{
-            position: 'absolute', inset: -30, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(255,140,0,0.15) 0%, transparent 70%)',
-            filter: 'blur(15px)',
-          }}
-        />
-      </div>
+        <div style={{
+          position: 'relative',
+          width: 70, height: 70,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, #FFFDE1 0%, #FFD700 50%, #FF8C00 100%)',
+          boxShadow: '0 0 120px 30px rgba(255, 140, 0, 0.2), 0 0 60px rgba(255, 215, 0, 0.3)',
+        }}>
+          <motion.div
+            animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            style={{
+              position: 'absolute', inset: -30, borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(255,140,0,0.15) 0%, transparent 70%)',
+              filter: 'blur(15px)',
+            }}
+          />
+        </div>
 
-      {planets.map((p, i) => (
-        <React.Fragment key={p.name}>
+        {planets.map((p, i) => (
+          <React.Fragment key={p.name}>
           <div style={{
             position: 'absolute',
             width: p.dist * 2,
@@ -256,28 +276,22 @@ function SolarSystemBackground() {
           </motion.div>
         </React.Fragment>
       ))}
-    </motion.div>
+      </motion.div>
+    </div>
   )
-}
+})
 
-function StarField() {
-  const [isMobile, setIsMobile] = useState(false)
-  
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+const StarField = memo(() => {
+  const isMobile = useIsMobile()
 
   const stars = useMemo(() => {
-    const count = isMobile ? 40 : 120
+    const count = isMobile ? 30 : 120
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       top: `${Math.random() * 100}%`,
       left: `${Math.random() * 100}%`,
-      size: Math.random() * 2.5 + 0.5,
-      duration: Math.random() * 3 + 2,
+      size: Math.random() * 2 + 0.5,
+      duration: Math.random() * 4 + 3,
       delay: Math.random() * 5,
       color: Math.random() > 0.8 ? 'var(--aura-lavender)' : Math.random() > 0.9 ? 'var(--aura-teal)' : 'white'
     }))
@@ -288,7 +302,7 @@ function StarField() {
       {stars.map(star => (
         <motion.div
           key={star.id}
-          animate={isMobile ? { opacity: [0.2, 0.6, 0.2] } : { opacity: [0.1, 0.8, 0.1], scale: [1, 1.2, 1] }}
+          animate={isMobile ? { opacity: [0.3, 0.6, 0.3] } : { opacity: [0.1, 0.8, 0.1], scale: [1, 1.2, 1] }}
           transition={{ duration: star.duration, repeat: Infinity, delay: star.delay }}
           style={{
             position: 'absolute',
@@ -298,17 +312,16 @@ function StarField() {
             height: star.size,
             background: star.color,
             borderRadius: '50%',
-            boxShadow: star.size > 1 ? `0 0 ${star.size * 2}px ${star.color}` : 'none',
             willChange: 'opacity',
           }}
         />
       ))}
-      <ShootingStar />
+      {!isMobile && <ShootingStar />}
     </div>
   )
-}
+})
 
-function SectionHeading({ subtitle, title, centered = false }) {
+const SectionHeading = memo(({ subtitle, title, centered = false }) => {
   return (
     <div style={{ textAlign: centered ? 'center' : 'left', marginBottom: 48 }}>
       <motion.p
@@ -344,7 +357,7 @@ function SectionHeading({ subtitle, title, centered = false }) {
       {centered && <div className="divider" style={{ background: 'linear-gradient(90deg, transparent, var(--aura-lavender), transparent)', height: '1px', width: '60px', margin: '24px auto' }} />}
     </div>
   )
-}
+})
 
 const bookingTypesData = [
   { 
@@ -353,8 +366,7 @@ const bookingTypesData = [
     description: 'Immediate clarity when the path is uncertain. Same-day availability.', 
     icon: 'Zap', 
     price: '₹ 2,500', 
-    color: 'rgba(253, 111, 136, 0.7)',
-    bg: 'linear-gradient(145deg, rgba(255, 245, 247, 0.88), rgba(245, 220, 228, 0.78))' 
+    tint: '#FD6F88',
   },
   { 
     id: 'oneday', 
@@ -362,8 +374,7 @@ const bookingTypesData = [
     description: 'Thoughtful preparation for the journey ahead. Scheduled with intent.', 
     icon: 'Clock', 
     price: '₹ 2,000', 
-    color: 'rgba(142, 154, 175, 0.7)',
-    bg: 'linear-gradient(145deg, rgba(240, 244, 255, 0.92), rgba(220, 228, 240, 0.82))' 
+    tint: '#8E9AAF',
   },
   { 
     id: 'weekly', 
@@ -371,8 +382,7 @@ const bookingTypesData = [
     description: 'Your spiritual compass for the seven days ahead. Deep alignment.', 
     icon: 'Calendar', 
     price: '₹ 6,000', 
-    color: 'rgba(178, 141, 255, 0.7)',
-    bg: 'linear-gradient(145deg, rgba(248, 244, 255, 0.92), rgba(228, 218, 250, 0.82))' 
+    tint: '#B28DFF',
   },
   { 
     id: 'monthly', 
@@ -380,14 +390,14 @@ const bookingTypesData = [
     description: 'Exhaustive life review. Mapping the lunar currents of your soul.', 
     icon: 'CalendarRange', 
     price: '₹ 10,000', 
-    color: 'rgba(227, 187, 118, 0.7)',
-    bg: 'linear-gradient(145deg, rgba(255, 248, 238, 0.92), rgba(244, 226, 196, 0.82))' 
+    tint: '#E3BB76',
   },
 ]
 
 
 export default function Home() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
 
   return (
     <div className="page-wrapper" style={{ position: 'relative', background: 'var(--bg-void)' }}>
@@ -415,12 +425,12 @@ export default function Home() {
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'flex-start',
+        alignItems: isMobile ? 'center' : 'flex-start',
         justifyContent: 'center',
         position: 'relative',
         zIndex: 1,
-        textAlign: 'left',
-        padding: '120px 8% 80px',
+        textAlign: isMobile ? 'center' : 'left',
+        padding: isMobile ? '160px 6% 80px' : '140px 8% 100px',
         maxWidth: 1400,
         margin: '0 auto',
         overflow: 'hidden',
@@ -440,13 +450,13 @@ export default function Home() {
           <MoonPhaseWidget />
         </motion.div>
 
-        <div style={{ position: 'absolute', right: '-10%', top: '50%', transform: 'translateY(-50%)', opacity: 0.1, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', right: isMobile ? '-20%' : '-10%', top: '50%', transform: 'translateY(-50%)', opacity: 0.05, pointerEvents: 'none' }}>
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+            transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
             style={{
-              width: 'clamp(400px, 80vw, 800px)', 
-              height: 'clamp(400px, 80vw, 800px)',
+              width: 'clamp(300px, 80vw, 1000px)', 
+              height: 'clamp(300px, 80vw, 1000px)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '50%',
               position: 'relative',
@@ -475,7 +485,7 @@ export default function Home() {
             marginBottom: 24,
           }}
         >
-          ✦ Premium Tarot Readings
+          ✦ Tarot Readings
         </motion.div>
 
         <motion.h1
@@ -485,12 +495,13 @@ export default function Home() {
           style={{
             fontFamily: 'var(--font-display)',
             fontWeight: 400,
-            fontSize: 'clamp(48px, 12vw, 120px)',
-            color: '#0a0a0c',
-            letterSpacing: '0.01em',
-            lineHeight: 0.9,
-            marginBottom: 24,
-            textShadow: '0 0 30px rgba(255,255,255,0.3)',
+            fontSize: 'clamp(48px, 14vw, 120px)',
+            color: 'white',
+            letterSpacing: '-0.02em',
+            lineHeight: 0.85,
+            marginBottom: 32,
+            textShadow: '0 0 50px rgba(167, 139, 250, 0.3)',
+            wordBreak: 'break-word',
           }}
         >
           The Fifth Suit
@@ -504,58 +515,62 @@ export default function Home() {
             fontFamily: 'var(--font-body)',
             fontWeight: 400,
             fontSize: 'clamp(14px, 4vw, 18px)',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: 'rgba(10, 10, 12, 0.8)',
-            marginBottom: 40,
-            maxWidth: 500,
+            letterSpacing: '0.05em',
+            color: 'rgba(255, 255, 255, 0.6)',
+            marginBottom: 48,
+            maxWidth: isMobile ? '100%' : 500,
             lineHeight: 1.6,
           }}
         >
           Navigate the liminal spaces. <br className="hidden sm:block"/>
-          <span style={{ color: '#D63D5A', fontWeight: 600 }}>Where the cards meet your destiny.</span>
+          <span style={{ color: 'var(--aura-lavender)', fontWeight: 500 }}>Where the cards meet your destiny.</span>
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}
+          style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start', width: isMobile ? '100%' : 'auto' }}
         >
-          <Link to="/booking" style={{ textDecoration: 'none' }}>
+          <Link to="/booking" style={{ textDecoration: 'none', width: isMobile ? '100%' : 'auto' }}>
             <motion.button
-              whileHover={{ y: -5, boxShadow: '0 12px 40px rgba(0,0,0,0.1)' }}
+              whileHover={isMobile ? {} : { y: -5, background: 'white', color: 'black' }}
+              whileTap={{ scale: 0.95 }}
               style={{
-                background: '#0a0a0c',
+                background: 'rgba(255,255,255,0.95)',
                 border: 'none',
-                borderRadius: 14,
-                padding: '18px 32px',
+                borderRadius: 16,
+                padding: isMobile ? '18px 0' : '20px 40px',
+                width: isMobile ? '100%' : 'auto',
+                color: 'black',
+                fontFamily: 'var(--font-heading)',
+                fontSize: 13,
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                fontWeight: 700,
+              }}
+            >
+              Book a Reading
+            </motion.button>
+          </Link>
+          <Link to="/daily-draw" style={{ textDecoration: 'none', width: isMobile ? '100%' : 'auto' }}>
+            <motion.button
+              whileHover={isMobile ? {} : { y: -5, background: 'rgba(255,255,255,0.1)' }}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: 16,
+                padding: isMobile ? '18px 0' : '20px 40px',
+                width: isMobile ? '100%' : 'auto',
                 color: 'white',
                 fontFamily: 'var(--font-heading)',
                 fontSize: 13,
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
-              }}
-            >
-              Book a Reading
-            </motion.button>
-          </Link>
-          <Link to="/daily-draw" style={{ textDecoration: 'none' }}>
-            <motion.button
-              whileHover={{ y: -5, background: 'rgba(255,255,255,0.6)' }}
-              style={{
-                background: 'rgba(255,255,255,0.4)',
-                backdropFilter: 'blur(24px)',
-                border: '1px solid rgba(255,255,255,0.5)',
-                borderRadius: 14,
-                padding: '18px 32px',
-                color: '#0a0a0c',
-                fontFamily: 'var(--font-heading)',
-                fontSize: 13,
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                cursor: 'pointer',
+                fontWeight: 600,
               }}
             >
               Daily Draw
@@ -565,14 +580,8 @@ export default function Home() {
       </section>
 
       {/* STATS */}
-      <section style={{ padding: '80px 0', background: 'rgba(255,255,255,0.2)', borderTop: '1px solid rgba(255,255,255,0.3)', borderBottom: '1px solid rgba(255,255,255,0.3)' }}>
-        <div className="container-max" style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(2, 1fr)', 
-          '@media (min-width: 768px)': { gridTemplateColumns: 'repeat(4, 1fr)' }, // Note: Handled via Tailwind grid-cols
-          gap: 'clamp(24px, 5vw, 40px)', 
-          textAlign: 'center' 
-        }} className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section style={{ padding: isMobile ? '60px 0' : '100px 0', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.01)' }}>
+        <div className="container-max grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
           {[
             { icon: Users, val: '5,000+', label: 'Souls Guided' },
             { icon: Star, val: '4.9/5', label: 'Celestial Rating' },
@@ -580,35 +589,35 @@ export default function Home() {
             { icon: Globe, val: 'Worldwide', label: 'Spiritual Reach' },
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-              <stat.icon size={20} style={{ color: '#D63D5A', marginBottom: 12, margin: '0 auto 12px' }} />
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(24px, 4vw, 32px)', color: '#0a0a0c', marginBottom: 4 }}>{stat.val}</p>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'rgba(10, 10, 12, 0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>{stat.label}</p>
+              <stat.icon size={18} style={{ color: 'var(--aura-lavender)', marginBottom: 12, margin: '0 auto 12px', opacity: 0.8 }} />
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(24px, 4vw, 36px)', color: 'white', marginBottom: 2 }}>{stat.val}</p>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 9, color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 600 }}>{stat.label}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* ABOUT */}
-      <section className="section-padding" style={{ position: 'relative', zIndex: 1 }}>
+      <section className="section-padding" style={{ position: 'relative', zIndex: 1, padding: isMobile ? '80px 0' : '120px 0' }}>
         <div className="container-max">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              style={{ display: 'flex', justifyContent: 'center' }}
+              style={{ display: 'flex', justifyContent: 'center', order: isMobile ? 2 : 1 }}
             >
-              <div style={{ position: 'relative', width: 'min(100%, 340px)', aspectRatio: '340/440' }}>
-                <div style={{ position: 'absolute', inset: -15, border: '1px solid rgba(10,10,12,0.05)', borderRadius: 24, transform: 'rotate(-2deg)' }} />
-                <div style={{ position: 'absolute', inset: -15, border: '1px solid rgba(10,10,12,0.05)', borderRadius: 24, transform: 'rotate(1deg)' }} />
+              <div style={{ position: 'relative', width: 'min(100%, 380px)', aspectRatio: '340/480' }}>
+                <div style={{ position: 'absolute', inset: -15, border: '1px solid rgba(255,255,255,0.03)', borderRadius: 32, transform: 'rotate(-3deg)' }} />
+                <div style={{ position: 'absolute', inset: -15, border: '1px solid rgba(255,255,255,0.03)', borderRadius: 32, transform: 'rotate(2deg)' }} />
                 <div style={{
                   width: '100%',
                   height: '100%',
-                  borderRadius: 24,
-                  background: 'rgba(255,255,255,0.4)',
-                  backdropFilter: 'blur(32px)',
-                  border: '1px solid rgba(255,255,255,0.6)',
-                  boxShadow: '0 30px 60px rgba(0,0,0,0.05)',
+                  borderRadius: 32,
+                  background: 'rgba(255,255,255,0.02)',
+                  backdropFilter: 'blur(40px)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  boxShadow: '0 40px 80px rgba(0,0,0,0.4)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -616,26 +625,26 @@ export default function Home() {
                   position: 'relative',
                 }}>
                   <motion.div
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
-                    transition={{ duration: 6, repeat: Infinity }}
-                    style={{ position: 'absolute', width: '80%', height: '80%', background: 'radial-gradient(circle, #D63D5A 0%, transparent 70%)', filter: 'blur(60px)' }}
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.05, 0.15, 0.05] }}
+                    transition={{ duration: 8, repeat: Infinity }}
+                    style={{ position: 'absolute', width: '100%', height: '100%', background: 'radial-gradient(circle, var(--aura-lavender) 0%, transparent 70%)', filter: 'blur(80px)' }}
                   />
-                  <span style={{ fontSize: 96, opacity: 0.1 }}>✦</span>
+                  <span style={{ fontSize: isMobile ? 80 : 120, opacity: 0.1, color: 'white' }}>✦</span>
                 </div>
               </div>
             </motion.div>
 
-            <div>
-              <SectionHeading subtitle="The Reader" title="Seraphina Vael" />
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(15px, 2vw, 17px)', lineHeight: 1.8, color: 'rgba(10, 10, 12, 0.7)', marginBottom: 24, fontWeight: 450 }}>
-                For fifteen years, I have walked the liminal spaces between the seen and the unseen. The cards found me during a time of profound transformation, and they have been my companions, teachers, and mirrors ever since.
+            <div style={{ order: isMobile ? 1 : 2, textAlign: isMobile ? 'center' : 'left' }}>
+              <SectionHeading subtitle="The Reader" title="Janvi Gakher" centered={isMobile} />
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(15px, 2vw, 18px)', lineHeight: 1.8, color: 'rgba(255, 255, 255, 0.6)', marginBottom: 24, fontWeight: 400 }}>
+                I’m Janvi Gakher — an intuitive tarot reader offering guidance for life clarity, spiritual growth, emotional healing, and self-reflection.
               </p>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(15px, 2vw, 17px)', lineHeight: 1.8, color: 'rgba(10, 10, 12, 0.7)', marginBottom: 32, fontWeight: 450 }}>
-                Each reading at TheFifthSuite is a sacred conversation. I do not predict your future. I illuminate the present so clearly that the path forward reveals itself.
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(15px, 2vw, 18px)', lineHeight: 1.8, color: 'rgba(255, 255, 255, 0.6)', marginBottom: 40, fontWeight: 400 }}>
+               I believe tarot is not about fear or fixed destiny. Tarot is a tool for guidance, reflection, and deeper awareness — not absolute prediction. Your choices, intuition, and personal journey will always matter the most.
               </p>
               <motion.button
-                whileHover={{ x: 10 }}
-                style={{ background: 'none', border: 'none', color: '#D63D5A', fontFamily: 'var(--font-heading)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700 }}
+                whileHover={isMobile ? {} : { x: 10, color: 'white' }}
+                style={{ background: 'none', border: 'none', color: 'var(--aura-lavender)', fontFamily: 'var(--font-heading)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.2em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', gap: 12, fontWeight: 700, width: isMobile ? '100%' : 'auto' }}
               >
                 Our Sacred Craft →
               </motion.button>
@@ -645,61 +654,89 @@ export default function Home() {
       </section>
 
       {/* BOOKING TYPES */}
-      <section className="section-padding" style={{ position: 'relative', zIndex: 1, background: 'rgba(0,0,0,0.01)' }}>
+      <section style={{ position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.01)', padding: isMobile ? '80px 0' : '120px 0', marginBottom: 60 }}>
         <div className="container-max">
           <SectionHeading subtitle="Our Offerings" title="Choose Your Reading" centered />
           
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 24,
-            marginTop: 48,
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+            gap: isMobile ? 20 : 40,
+            marginTop: isMobile ? 32 : 80,
           }}>
             {bookingTypesData.map((type, i) => {
               const Icon = iconMap[type.icon]
               return (
                 <SpectralTiltCard
                   key={type.id}
-                  tintColor={type.color}
-                  bgGradient={type.bg}
+                  tintColor={type.tint}
+                  bgGradient={isMobile 
+                    ? `linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%)`
+                    : `linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, ${type.tint}05 100%)`
+                  }
                   style={{ 
-                    padding: 40, 
+                    padding: isMobile ? '32px 24px' : '48px', 
                     display: 'flex', 
                     flexDirection: 'column', 
-                    gap: 20, 
+                    gap: isMobile ? 20 : 24, 
+                    border: isMobile ? '1px solid rgba(255, 255, 255, 1)' : '1px solid rgba(255, 255, 255, 0.05)',
+                    height: '100%',
+                    borderRadius: 24,
+                    boxShadow: isMobile ? '0 20px 40px rgba(0,0,0,0.15)' : 'none',
                   }}
                 >
                   <div style={{
-                    width: 56, height: 56,
-                    background: `${type.color}11`,
-                    borderRadius: 16,
+                    width: isMobile ? 56 : 64, 
+                    height: isMobile ? 56 : 64,
+                    background: isMobile ? 'white' : 'rgba(255,255,255,0.7)',
+                    borderRadius: 18,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: type.color,
-                    border: `1px solid ${type.color}33`
+                    color: type.tint,
+                    border: '1px solid rgba(0,0,0,0.05)',
+                    boxShadow: '0 8px 16px rgba(0,0,0,0.05)',
                   }}>
-                    {Icon && <Icon size={28} />}
+                    {Icon && <Icon size={isMobile ? 28 : 32} />}
                   </div>
-                  <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: 20, color: '#0a0a0c', fontWeight: 600 }}>{type.name}</h3>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'rgba(10, 10, 12, 0.7)', lineHeight: 1.6, flex: 1, fontWeight: 450 }}>{type.description}</p>
+                  <h3 style={{ 
+                    fontFamily: 'var(--font-heading)', 
+                    fontSize: isMobile ? 20 : 22, 
+                    color: '#0a0a0c', 
+                    fontWeight: 700,
+                    letterSpacing: '0.02em'
+                  }}>
+                    {type.name}
+                  </h3>
+                  <p style={{ 
+                    fontFamily: 'var(--font-body)', 
+                    fontSize: 16, 
+                    color: isMobile ? 'rgba(10, 10, 12, 0.8)' : 'rgba(10, 10, 12, 0.6)', 
+                    lineHeight: 1.6, 
+                    flex: 1, 
+                    fontWeight: isMobile ? 500 : 450 
+                  }}>
+                    {type.description}
+                  </p>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
-                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 24, color: '#0a0a0c', fontWeight: 500 }}>{type.price}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
+                    <p style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? 24 : 28, color: '#0a0a0c', fontWeight: 600 }}>{type.price}</p>
                     <motion.button
                       onClick={() => navigate('/booking', { state: { bookingType: type.id } })}
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={isMobile ? {} : { scale: 1.05, background: '#0a0a0c', color: 'white' }}
+                      whileTap={{ scale: 0.95 }}
                       style={{
-                        padding: '10px 20px',
+                        padding: '12px 24px',
                         background: '#0a0a0c',
                         border: 'none',
-                        borderRadius: 10,
+                        borderRadius: 12,
                         color: 'white',
                         fontFamily: 'var(--font-heading)',
                         fontSize: 11,
-                        letterSpacing: '0.1em',
+                        letterSpacing: '0.15em',
                         textTransform: 'uppercase',
                         cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        fontWeight: 700,
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                       }}
                     >
                       Select
@@ -712,48 +749,55 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section className="section-padding" style={{ position: 'relative', zIndex: 1 }}>
+      {/* DAILY DRAW CTA */}
+      <section style={{ position: 'relative', zIndex: 1, padding: isMobile ? '60px 0 100px' : '100px 0 160px' }}>
         <div className="container-max">
-          <SectionHeading subtitle="Voices from the Journey" title="Testimonials" centered />
-          
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             style={{
-              background: 'rgba(255,255,255,0.4)',
-              backdropFilter: 'blur(32px)',
-              border: '1px solid rgba(253, 111, 136, 0.2)',
-              borderRadius: 32,
-              padding: '100px 40px',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%)',
+              backdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: isMobile ? 32 : 48,
+              padding: isMobile ? '80px 24px' : '120px 40px',
               textAlign: 'center',
               position: 'relative',
               overflow: 'hidden',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.05)',
+              boxShadow: '0 40px 100px rgba(0,0,0,0.3)',
             }}
           >
-            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(36px, 6vw, 64px)', marginBottom: 24, position: 'relative', color: '#0a0a0c' }}>
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], opacity: [0.05, 0.1, 0.05] }}
+              transition={{ duration: 10, repeat: Infinity }}
+              style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, var(--aura-lavender) 0%, transparent 70%)', filter: 'blur(100px)', zIndex: 0 }}
+            />
+            
+            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(32px, 8vw, 80px)', marginBottom: 24, position: 'relative', color: 'white', lineHeight: 1.1 }}>
               ✦ Your Daily Draw Awaits ✦
             </h2>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 18, color: 'rgba(10, 10, 12, 0.7)', maxWidth: 640, margin: '0 auto 48px', lineHeight: 1.8, position: 'relative', fontWeight: 450 }}>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: isMobile ? 16 : 18, color: 'rgba(255, 255, 255, 0.5)', maxWidth: 640, margin: '0 auto 40px', lineHeight: 1.8, position: 'relative', fontWeight: 400 }}>
               Shuffle the 78 cards of the Rider-Waite deck. <br/>
               Let three cards reveal the currents of your day.
             </p>
-            <Link to="/daily-draw" style={{ textDecoration: 'none', position: 'relative' }}>
+            <Link to="/daily-draw" style={{ textDecoration: 'none', position: 'relative', display: 'inline-block', width: isMobile ? '100%' : 'auto' }}>
               <motion.button
-                whileHover={{ scale: 1.05, boxShadow: '0 0 50px rgba(253,111,136,0.3)' }}
+                whileHover={isMobile ? {} : { scale: 1.05, background: 'white', color: 'black' }}
+                whileTap={{ scale: 0.95 }}
                 style={{
-                  background: '#0a0a0c',
+                  background: 'rgba(255,255,255,0.95)',
                   border: 'none',
                   borderRadius: 16,
-                  padding: '20px 60px',
-                  color: 'white',
+                  padding: isMobile ? '20px 0' : '24px 64px',
+                  width: isMobile ? '100%' : 'auto',
+                  color: 'black',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 15,
-                  letterSpacing: '0.2em',
+                  fontSize: 14,
+                  letterSpacing: '0.25em',
                   textTransform: 'uppercase',
                   cursor: 'pointer',
+                  fontWeight: 700,
                 }}
               >
                 Begin Today's Draw
@@ -765,17 +809,19 @@ export default function Home() {
 
       <footer style={{
         position: 'relative', zIndex: 1,
-        borderTop: '1px solid rgba(253,111,136,0.1)',
-        padding: 'clamp(60px, 12vh, 120px) 24px',
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+        padding: '100px 24px',
         textAlign: 'center',
+        background: 'rgba(0,0,0,0.2)',
       }}>
-        <p style={{ fontFamily: 'var(--font-heading)', fontSize: 18, letterSpacing: '0.2em', color: '#0a0a0c', opacity: 0.8, marginBottom: 16, fontWeight: 600 }}>
-          TheFifthSuite
+        <p style={{ fontFamily: 'var(--font-heading)', fontSize: 20, letterSpacing: '0.3em', color: 'white', opacity: 0.9, marginBottom: 16, fontWeight: 600, textTransform: 'uppercase' }}>
+          The Fifth Suite
         </p>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'rgba(10, 10, 12, 0.5)', opacity: 1, letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 500 }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'rgba(255, 255, 255, 0.3)', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 500 }}>
           Where the cards meet your destiny
         </p>
       </footer>
     </div>
   )
 }
+

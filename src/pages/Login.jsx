@@ -35,7 +35,7 @@ export default function Login() {
   }
 
   return (
-    <div className="page-wrapper" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 24px' }}>
+    <div className="page-wrapper" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '120px 24px 80px' : '80px 24px' }}>
       <AuroraBackground />
 
       <motion.div
